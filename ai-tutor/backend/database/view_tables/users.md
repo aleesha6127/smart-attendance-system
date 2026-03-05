@@ -1,0 +1,12 @@
+# Table: users
+
+| id | user_id | name | email | password_hash | role | department | batch | semester | is_active | phone | address | designation | avatar | face_image_path | created_at |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | admin001 | System Admin | admin@system.com | 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9 | admin |  |  | 4 | 1 |  |  |  |  |  | 2026-02-05 12:54:26 |
+| 58 | student002 | Aslam | aslam@gmail.com | 31d21842d257322048c1b53fcd0a7ff1041ae2ae61f023d4180379423c044213 | student | Civil Engineering | 2025-2029 | Year 1 | 1 |  |  |  | /static\avatars\ed3b5d4f4f15bbbd9da73643da00f94a_100x100.png | student002/student002_1769668033.jpg | 2026-02-05 12:54:26 |
+| 85 | teacher001 | Farhath | farhath@gmail.com | 3945c7b49cf9153f0d1c9e16b839f36b9ed7eb2c16d72c4a3f49d283f74d5895 | teacher | Information Technology |  |  | 1 |  |  |  | /static\avatars\b75cf99929c893d0d085f674a6d1879f_100x100.png | teacher001/teacher001_1770269590.jpg | 2026-02-05 12:54:26 |
+| 89 | teacher002 | Leona | leona@gmail.com | b358bae9cf324e595279787dc1d28a022f0d866b75bf588fd7879b2d04d4b0f7 | teacher | Information Technology |  |  | 1 |  |  |  | /static\avatars\60dfd33f77d095153779aa145d2db281_100x100.png | teacher002/teacher002_1770280845.jpg | 2026-02-05 12:54:26 |
+| 115 | teacher003 | Anas | anas@gmail.com | 18c8ad9a41cbecfef74944e68b998fa5781d3683b37f88769b58aeb85e6d7f20 | teacher | Mechanical Engineering |  |  | 1 |  |  |  | /static\avatars\65fd6600a8b1cb256813e5fa9018d9a9_100x100.png | teacher003/teacher003_1770538434.jpg |  |
+| 118 | student003 | Denit | denit@gmail.com | fc7c0098b1372e284f66e764b44c83518352e70f49af0e10f01e3aefb6571c8a | student | Information Technology | 2024-2028 | Semester 4 | 1 |  |  |  | /static\avatars\0b2c947ae20cfe4bf6ab372f809edf24_100x100.png | student003/student003_1770616944.jpg |  |
+| 123 | student001 | Rony | rony@gmail.com | 5c5da4abf2b1be00b628c9b096ea4445b503479b4a4a198bc5636c0f1ac389c2 | student | Information Technology | 2024-2028 | Semester 4 | 1 |  |  |  | /static\avatars\68b40f003934003e5a59316c593a98a8_100x100.png | student001/student001_1770618402.jpg |  |
+| 137 | student004 | Aleesha | aleeshaanas2@gmail.com | 9e6efa57008f3b4ca46018f4d8411eebfbc9be70d116e2dc541dd760a04a28d5 | student | Mathematics | 2024-2028 | Semester 4 | 1 |  |  |  | /static\avatars\9233e19049d4635488a023e68a5829b8_100x100.png | student004/student004_1771229984.jpg |  |

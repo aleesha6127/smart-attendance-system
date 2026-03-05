@@ -1,0 +1,71 @@
+{
+    "pending": [
+        {
+            "id": 1,
+            "name": "Aleesha",
+            "email": "aleesha@gmail.com",
+            "registration_status": "approved",
+            "face_image_path": "dataset/pending/pending_aleesha_1772036095.jpg"
+        },
+        {
+            "id": 5,
+            "name": "Aleesha Anas",
+            "email": "aleeshaanas2@gmail.com",
+            "registration_status": "approved",
+            "face_image_path": "dataset/pending/pending_aleeshaanas2_1772215658.jpg"
+        },
+        {
+            "id": 6,
+            "name": "Aleesha Anas",
+            "email": "aleeshaanas@gmail.com",
+            "registration_status": "approved",
+            "face_image_path": "dataset/pending/pending_aleeshaanas_1772216012.jpg"
+        },
+        {
+            "id": 7,
+            "name": "Aleesha Anas",
+            "email": "aleesh@gmail.com",
+            "registration_status": "approved",
+            "face_image_path": "dataset/pending/pending_aleesh_1772217011.jpg"
+        },
+        {
+            "id": 8,
+            "name": "Adam",
+            "email": "adam@gmail.com",
+            "registration_status": "pending",
+            "face_image_path": "dataset/pending/pending_adam_1772217141.jpg"
+        }
+    ],
+    "users": [
+        {
+            "user_id": "admin001",
+            "name": "System Admin",
+            "email": "admin@system.com",
+            "face_image_path": null
+        },
+        {
+            "user_id": "student002",
+            "name": "Aslam",
+            "email": "aslam@gmail.com",
+            "face_image_path": "student002/student002_1769668033.jpg"
+        },
+        {
+            "user_id": "teacher001",
+            "name": "Farhath",
+            "email": "farhath@gmail.com",
+            "face_image_path": "teacher001/teacher001_1770269590.jpg"
+        },
+        {
+            "user_id": "teacher002",
+            "name": "Leona",
+            "email": "leona@gmail.com",
+            "face_image_path": "teacher002/teacher002_1770280845.jpg"
+        },
+        {
+            "user_id": "teacher003",
+            "name": "Anas",
+            "email": "anas@gmail.com",
+            "face_image_path": "teacher003/teacher003_1770538434.jpg"
+        }
+    ]
+}

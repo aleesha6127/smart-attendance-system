@@ -1,0 +1,273 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}{{ report_type }} - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+    }
+
+    .report-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .report-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .report-header:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .report-card {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fbfd);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: var(--shadow);
+    }
+
+    .summary-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .summary-label {
+        font-size: 0.9em;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .attendance-status {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+
+    .status-present {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+    }
+
+    .status-absent {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .status-late {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+    }
+
+    .export-options {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+<div class="report-container">
+    <div class="container">
+        <!-- Report Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="report-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1 text-dark"><i class="fas fa-file-alt me-3"></i>{{ report_type }}</h2>
+                            <p class="text-muted mb-0">Detailed attendance analysis and reporting</p>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ attendance_data|length }}</h4>
+                            <small class="text-muted">Records</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="export-options">
+            <h5 class="mb-4 text-primary"><i class="fas fa-download me-2"></i>Export Options</h5>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success"><i class="fas fa-file-excel me-2"></i>Export to Excel</button>
+                <button class="btn btn-danger"><i class="fas fa-file-pdf me-2"></i>Export to PDF</button>
+                <button class="btn btn-secondary"><i class="fas fa-print me-2"></i>Print Report</button>
+                <button class="btn btn-info"><i class="fas fa-envelope me-2"></i>Email Report</button>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-summary">
+            <div class="summary-card">
+                <div class="summary-value">{{ attendance_data|selectattr('status', 'equalto', 'present')|list|length }}
+                </div>
+                <div class="summary-label">Present</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">{{ attendance_data|selectattr('status', 'equalto', 'absent')|list|length }}
+                </div>
+                <div class="summary-label">Absent</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">{{ attendance_data|selectattr('status', 'equalto', 'late')|list|length }}
+                </div>
+                <div class="summary-label">Late</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value">{{ "%.2f"|format((attendance_data|selectattr('status', 'equalto',
+                    'present')|list|length) / (attendance_data|length) * 100) if attendance_data|length > 0 else 0 }}%
+                </div>
+                <div class="summary-label">Attendance Rate</div>
+            </div>
+        </div>
+
+        <!-- Attendance Data Table -->
+        <div class="report-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0"><i class="fas fa-table me-2"></i>Detailed Attendance Records</h5>
+                <small class="text-muted">{{ attendance_data|length }} records found</small>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th><i class="fas fa-user me-1"></i>Student Name</th>
+                            <th><i class="fas fa-id-card me-1"></i>Student ID</th>
+                            <th><i class="fas fa-calendar me-1"></i>Date</th>
+                            <th><i class="fas fa-clock me-1"></i>Period</th>
+                            <th><i class="fas fa-user-tie me-1"></i>Marked By</th>
+                            <th><i class="fas fa-check-circle me-1"></i>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_data %}
+                        <tr>
+                            <td>{{ record.name }}</td>
+                            <td>{{ record.user_id }}</td>
+                            <td>{{ record.date }}</td>
+                            <td>Period {{ record.period }}</td>
+                            <td>{{ record.teacher_name or 'N/A' }}</td>
+                            <td>
+                                <span class="attendance-status 
+                                    {% if record.status == 'present' %}status-present
+                                    {% elif record.status == 'late' %}status-late
+                                    {% else %}status-absent{% endif %}">
+                                    {{ record.status|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not attendance_data %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No attendance records found for the selected
+                                criteria</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="report-card">
+            <h5 class="text-primary mb-4"><i class="fas fa-filter me-2"></i>Filter Options</h5>
+            <form method="POST" action="{{ url_for('generate_report') }}">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="report_type" class="form-label">Report Type</label>
+                            <select class="form-select" id="report_type" name="report_type">
+                                <option value="daily_attendance" selected>Daily Attendance</option>
+                                <option value="weekly_summary">Weekly Summary</option>
+                                <option value="monthly_analysis">Monthly Analysis</option>
+                                <option value="student_performance">Student Performance</option>
+                                <option value="teacher_activity">Teacher Activity</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="period" class="form-label">Period</label>
+                            <select class="form-select" id="period" name="period">
+                                <option value="">All Periods</option>
+                                <option value="1">Period 1</option>
+                                <option value="2">Period 2</option>
+                                <option value="3">Period 3</option>
+                                <option value="4">Period 4</option>
+                                <option value="5">Period 5</option>
+                                <option value="6">Period 6</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-sync-alt me-2"></i>Update Report</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

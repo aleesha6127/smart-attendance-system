@@ -1,0 +1,399 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Mark Attendance - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+    }
+
+    .attendance-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .attendance-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .attendance-header:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .attendance-form {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .student-card {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fbfd);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        border: 1px solid #eee;
+    }
+
+    .student-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .attendance-btn {
+        width: 100%;
+        height: 40px;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .attendance-btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-present {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        border: none;
+    }
+
+    .btn-absent {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+    }
+
+    .btn-late {
+        background: linear-gradient(135deg, #f39c12, #d35400);
+        color: white;
+        border: none;
+    }
+
+
+
+    .attendance-table {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 20px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.2);
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: var(--primary-color);
+    }
+
+    .section-title {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2em;
+    }
+</style>
+
+<div class="attendance-container">
+    <div class="container">
+        <!-- Hidden data element to pass department-batch mapping to JavaScript -->
+        <script id="dept-batch-data"
+            type="application/json">{{ {'departments': departments, 'batches': batches}|tojson }}</script>
+
+        <!-- Attendance Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="attendance-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1 text-dark"><i class="fas fa-calendar-check me-3"></i>Mark Attendance</h2>
+                            <p class="text-muted mb-0">Select class, batch, and period to mark attendance for students
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ session.name }}</h4>
+                            <small class="text-muted">Teacher</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <form method="POST" class="attendance-form">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ today_date or '' }}"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Period</label>
+                            <select class="form-select" id="period" name="period" required>
+                                <option value="">Select Period</option>
+                                <option value="1">Period 1 (9:00 AM - 9:50 AM)</option>
+                                <option value="2">Period 2 (10:00 AM - 10:50 AM)</option>
+                                <option value="3">Period 3 (11:00 AM - 11:50 AM)</option>
+                                <option value="4">Period 4 (12:00 PM - 12:50 PM)</option>
+                                <option value="5">Period 5 (2:00 PM - 2:50 PM)</option>
+                                <option value="6">Period 6 (3:00 PM - 3:50 PM)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department" required
+                                onchange="loadBatches()">
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="batch" class="form-label">Batch</label>
+                            <select class="form-select" id="batch" name="batch" required>
+                                <option value="">Select Batch</option>
+                                <!-- Options will be populated dynamically by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-primary w-100" onclick="loadStudents()"><i
+                                    class="fas fa-search me-2"></i>Load Students</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="students-section" style="display: none;">
+            <!-- Student List for Attendance -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="attendance-table">
+                        <div class="section-header">
+                            <i class="fas fa-users section-icon"></i>
+                            <h5 class="section-title">Students in <span id="selected-department">-</span> - <span
+                                    id="selected-batch">-</span></h5>
+                        </div>
+
+                        <form method="POST" id="attendance-form">
+                            <input type="hidden" name="date" id="form-date" value="">
+                            <input type="hidden" name="period" id="form-period" value="">
+                            <input type="hidden" name="department" id="form-department" value="">
+                            <input type="hidden" name="batch" id="form-batch" value="">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Name</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="students-table-body">
+                                        <!-- Students will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-success w-100"><i
+                                        class="fas fa-check-circle me-2"></i>Submit Attendance</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pre-populate department-batch mapping from server data
+    const deptBatchData = JSON.parse(document.getElementById('dept-batch-data').textContent);
+    const departmentBatches = {};
+
+    // Initialize all departments with the same batches
+    deptBatchData.departments.forEach(dept => {
+        departmentBatches[dept] = [...deptBatchData.batches];
+    });
+
+    function loadBatches() {
+        const departmentSelect = document.getElementById('department');
+        const batchSelect = document.getElementById('batch');
+        const selectedDept = departmentSelect.value;
+
+        // Clear existing options
+        batchSelect.innerHTML = '<option value="">Select Batch</option>';
+
+        if (selectedDept && departmentBatches[selectedDept]) {
+            departmentBatches[selectedDept].forEach(function (batch) {
+                const option = document.createElement('option');
+                option.value = batch;
+                option.textContent = batch;
+                batchSelect.appendChild(option);
+            });
+        }
+    }
+
+    function loadStudents() {
+        const department = document.getElementById('department').value;
+        const batch = document.getElementById('batch').value;
+        const date = document.getElementById('date').value;
+        const period = document.getElementById('period').value;
+
+        if (!department || !batch || !date || !period) {
+            alert('Please select all required fields: Department, Batch, Date, and Period');
+            return;
+        }
+
+        // Update hidden form fields
+        document.getElementById('form-date').value = date;
+        document.getElementById('form-period').value = period;
+        document.getElementById('form-department').value = department;
+        document.getElementById('form-batch').value = batch;
+
+        // Update section header
+        document.getElementById('selected-department').textContent = department;
+        document.getElementById('selected-batch').textContent = batch;
+
+        // Make AJAX request to get students
+        fetch(`/api/get_students_by_dept_batch?department=${encodeURIComponent(department)}&batch=${encodeURIComponent(batch)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(students => {
+                const tbody = document.getElementById('students-table-body');
+                tbody.innerHTML = '';
+
+                if (students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No students found in this department and batch</td></tr>';
+                } else {
+                    students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${student.user_id}</td>
+                        <td>${student.name}</td>
+                        <td>
+                            <span class="badge bg-secondary" id="status-badge-${student.user_id}">Not Marked</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-present attendance-btn" onclick="setAttendance('${student.user_id}', 'present')">Present</button>
+                                <button type="button" class="btn btn-sm btn-late attendance-btn" onclick="setAttendance('${student.user_id}', 'late')">Late</button>
+                                <button type="button" class="btn btn-sm btn-absent attendance-btn" onclick="setAttendance('${student.user_id}', 'absent')">Absent</button>
+                            </div>
+                            <input type="hidden" name="status_${student.user_id}" id="status-input-${student.user_id}" value="absent">
+                        </td>
+                    `;
+                        tbody.appendChild(row);
+                    });
+                }
+
+                // Show the students section
+                document.getElementById('students-section').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading students:', error);
+                alert('Error loading students: ' + error.message + '. Please try again.');
+                // Hide the students section if there was an error
+                document.getElementById('students-section').style.display = 'none';
+            });
+    }
+
+    function setAttendance(studentId, status) {
+        // Update the hidden input field
+        document.getElementById(`status-input-${studentId}`).value = status;
+
+        // Update the badge
+        const badge = document.getElementById(`status-badge-${studentId}`);
+        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+        // Update badge class based on status
+        badge.className = 'badge';
+        if (status === 'present') {
+            badge.classList.add('bg-success');
+        } else if (status === 'absent') {
+            badge.classList.add('bg-danger');
+        } else if (status === 'late') {
+            badge.classList.add('bg-warning');
+        }
+
+        // Highlight the clicked button
+        const buttons = document.querySelectorAll(`[onclick*="setAttendance('${studentId}'"]`);
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // Load students if parameters are passed in the URL
+    window.onload = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const department = urlParams.get('department');
+        const batch = urlParams.get('batch');
+        const date = urlParams.get('date');
+        const period = urlParams.get('period');
+
+        if (department && batch && date && period) {
+            document.getElementById('department').value = department;
+            // Load batches for the selected department
+            loadBatches();
+            document.getElementById('batch').value = batch;
+            document.getElementById('date').value = date;
+            document.getElementById('period').value = period;
+
+            // Load students
+            loadStudents();
+        }
+    };
+</script>
+{% endblock %}

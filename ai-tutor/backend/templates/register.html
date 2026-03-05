@@ -1,0 +1,342 @@
+{% extends "base_public.html" %}
+
+{% block title %}Register - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    .registration-container {
+        max-width: 800px;
+        margin: 50px auto;
+    }
+
+    .form-step {
+        display: none;
+    }
+
+    .form-step.active {
+        display: block;
+    }
+
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+
+    .step-dot {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: #ccc;
+        margin: 0 10px;
+        transition: 0.3s;
+    }
+
+    .step-dot.active {
+        background: #007bff;
+        transform: scale(1.3);
+    }
+
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    #video {
+        width: 100%;
+        border-radius: 12px;
+        transform: scaleX(-1);
+    }
+
+    .face-guide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        height: 240px;
+        border: 3px dashed #00ff88;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+</style>
+
+<div class="registration-container">
+    <div class="card shadow-lg border-0">
+        <div class="card-header gradient-bg text-white text-center py-4">
+            <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>New User Registration</h3>
+        </div>
+        <div class="card-body p-5">
+            <div class="step-indicator">
+                <div class="step-dot active" id="dot1"></div>
+                <div class="step-dot" id="dot2"></div>
+                <div class="step-dot" id="dot3"></div>
+            </div>
+
+            <form id="registrationForm" method="POST">
+                <!-- Step 1: Personal Details -->
+                <div class="form-step active" id="step1">
+                    <h4 class="mb-4">Personal Details</h4>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" name="name"
+                                value="{{ form_data.name if form_data else '' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email ID *</label>
+                            <input type="email" class="form-control" name="email"
+                                value="{{ form_data.email if form_data else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" name="phone" id="phoneInput" pattern="[0-9]{10}"
+                                title="Please enter a 10-digit phone number"
+                                value="{{ form_data.phone if form_data else '' }}" required>
+                            <div class="form-text">10-digit number (e.g. 9876543210)</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Role *</label>
+                            <select class="form-select" name="role" id="roleSelect" required
+                                onchange="toggleStudentFields()">
+                                <option value="">Select Role</option>
+                                <option value="student" {{ 'selected' if form_data and form_data.role=='student' else ''
+                                    }}>Student</option>
+                                <option value="teacher" {{ 'selected' if form_data and form_data.role=='teacher' else ''
+                                    }}>Teacher</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="studentFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Department *</label>
+                                <select class="form-select" name="department" id="deptInput">
+                                    <option value="">Select Department</option>
+                                    <option value="Information Technology" {{ 'selected' if form_data and
+                                        form_data.department=='Information Technology' else '' }}>Information Technology
+                                    </option>
+                                    <option value="Civil Engineering" {{ 'selected' if form_data and
+                                        form_data.department=='Civil Engineering' else '' }}>Civil Engineering</option>
+                                    <option value="Mathematics Engineering" {{ 'selected' if form_data and
+                                        form_data.department=='Mathematics Engineering' else '' }}>Mathematics
+                                        Engineering</option>
+                                    <option value="Computer Science" {{ 'selected' if form_data and
+                                        form_data.department=='Computer Science' else '' }}>Computer Science</option>
+                                    <option value="Science" {{ 'selected' if form_data and
+                                        form_data.department=='Science' else '' }}>Science</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Batch *</label>
+                                <select class="form-select" name="batch" id="batchInput">
+                                    <option value="">Select Batch</option>
+                                    <option value="2024-2028" {{ 'selected' if form_data and
+                                        form_data.batch=='2024-2028' else '' }}>2024-2028</option>
+                                    <option value="2025-2029" {{ 'selected' if form_data and
+                                        form_data.batch=='2025-2029' else '' }}>2025-2029</option>
+                                    <option value="2023-2027" {{ 'selected' if form_data and
+                                        form_data.batch=='2023-2027' else '' }}>2023-2027</option>
+                                    <option value="2022-2026" {{ 'selected' if form_data and
+                                        form_data.batch=='2022-2026' else '' }}>2022-2026</option>
+                                </select>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5 class="mb-3">Parent's Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Parent's Name *</label>
+                                <input type="text" class="form-control" name="parent_name" id="parentNameInput"
+                                    value="{{ form_data.parent_name if form_data else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Parent's Phone *</label>
+                                <input type="tel" class="form-control" name="parent_phone" id="parentPhoneInput"
+                                    pattern="[0-9]{10}" title="Please enter a 10-digit phone number"
+                                    value="{{ form_data.parent_phone if form_data else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-primary px-5" onclick="nextStep(2)">Next <i
+                                class="fas fa-arrow-right ms-2"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Biometric Setup -->
+                <div class="form-step" id="step2">
+                    <h4 class="mb-4 text-center">Biometric Setup</h4>
+                    <p class="text-center text-muted">Position your face within the guide and capture your photo.</p>
+
+                    <div class="video-wrapper mb-4">
+                        <video id="video" autoplay playsinline></video>
+                        <div class="face-guide" id="faceGuide"></div>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                    </div>
+
+                    <div id="captureResult" class="text-center mb-3" style="display:none;">
+                        <img id="capturedPhoto" src="" class="img-thumbnail" style="max-width: 240px;">
+                        <p class="text-success fw-bold mt-2"><i class="fas fa-check-circle"></i> Photo Captured!</p>
+                    </div>
+
+                    <input type="hidden" name="image_data" id="imageData">
+
+                    <div class="text-center">
+                        <button type="button" class="btn btn-secondary me-2" onclick="prevStep(1)">Back</button>
+                        <button type="button" class="btn btn-info" id="captureBtn" onclick="capturePhoto()">Capture
+                            Photo</button>
+                        <button type="button" class="btn btn-warning" id="retakeBtn" style="display:none;"
+                            onclick="retakePhoto()">Retake</button>
+                        <button type="button" class="btn btn-primary" id="finalNextBtn" style="display:none;"
+                            onclick="nextStep(3)">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="form-step" id="step3">
+                    <div class="text-center">
+                        <i class="fas fa-clipboard-check fa-5x text-success mb-4"></i>
+                        <h4>Review your Registration</h4>
+                        <p class="text-muted">Once submitted, an admin will review your request. If approved, you will
+                            receive your login credentials.</p>
+                        <button type="submit" class="btn btn-success btn-lg px-5 mt-4">Submit Registration</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stream = null;
+
+    function toggleStudentFields() {
+        const role = document.getElementById('roleSelect').value;
+        const studentFields = document.getElementById('studentFields');
+        const inputs = studentFields.querySelectorAll('input');
+
+        if (role === 'student') {
+            studentFields.style.display = 'block';
+            inputs.forEach(input => input.required = true);
+        } else {
+            studentFields.style.display = 'none';
+            inputs.forEach(input => input.required = false);
+        }
+    }
+
+    // Call on load in case of form reload
+    window.onload = toggleStudentFields;
+
+    function nextStep(step) {
+        if (step === 2) {
+            // Validate Step 1
+            const required = document.getElementById('step1').querySelectorAll('input, select');
+            let allValid = true;
+            required.forEach(field => {
+                if (field.hasAttribute('required') && !field.value) {
+                    allValid = false;
+                    field.classList.add('is-invalid');
+                } else if (!field.checkValidity()) {
+                    allValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!allValid) {
+                alert('Please fill all fields correctly (Check phone number and email format).');
+                return;
+            }
+            startCamera();
+        }
+
+        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById('dot' + step).classList.add('active');
+    }
+
+    function prevStep(step) {
+        if (step === 1 && stream) {
+            stopCamera();
+        }
+        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById('dot' + step).classList.add('active');
+    }
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('video').srcObject = stream;
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            alert("Could not access camera. Biometric registration requires camera access.");
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        // Compress and limit resolution to avoid 413 Payload Too Large
+        const maxWidth = 800;
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+
+        if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Match the mirror effect
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, width, height);
+
+        // Compress image to 80% quality to ensure small base64 string
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('capturedPhoto').src = dataUrl;
+        document.getElementById('imageData').value = dataUrl;
+
+        video.style.display = 'none';
+        document.getElementById('faceGuide').style.display = 'none';
+        document.getElementById('captureResult').style.display = 'block';
+        document.getElementById('captureBtn').style.display = 'none';
+        document.getElementById('retakeBtn').style.display = 'inline-block';
+        document.getElementById('finalNextBtn').style.display = 'inline-block';
+
+        stopCamera();
+    }
+
+    function retakePhoto() {
+        document.getElementById('video').style.display = 'block';
+        document.getElementById('faceGuide').style.display = 'block';
+        document.getElementById('captureResult').style.display = 'none';
+        document.getElementById('captureBtn').style.display = 'inline-block';
+        document.getElementById('retakeBtn').style.display = 'none';
+        document.getElementById('finalNextBtn').style.display = 'none';
+        startCamera();
+    }
+</script>
+{% endblock %}

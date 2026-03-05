@@ -1,0 +1,211 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Teacher Dashboard - SmartCampus AI{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-white shadow-sm border-0" style="background: linear-gradient(135deg, white, #f8f9fa);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <div class="me-4 position-relative">
+                            {% if session.get('face_image_path') %}
+                            <img src="{{ url_for('face_images', filename=session['face_image_path']) }}" alt="Profile"
+                                class="rounded-circle shadow"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #fff;">
+                            {% elif session.get('avatar') %}
+                            <img src="{{ session.avatar }}" alt="Avatar" class="rounded-circle shadow"
+                                style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #fff;">
+                            {% else %}
+                            <div class="rounded-circle shadow d-flex align-items-center justify-content-center bg-primary text-white"
+                                style="width: 80px; height: 80px; border: 3px solid #fff; font-size: 2rem;">
+                                {{ session.name[0]|upper }}
+                            </div>
+                            {% endif %}
+                            <span
+                                class="position-absolute bottom-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle"></span>
+                        </div>
+                        <div>
+                            <h2 class="mb-1 fw-bold text-dark">Teacher Dashboard</h2>
+                            <p class="text-muted mb-0 fs-5">Welcome back, {{ session.name }}!</p>
+                            <span class="badge bg-light text-primary border mt-2">
+                                <i class="fas fa-chalkboard-teacher me-1"></i> Faculty Member
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-end mt-3 mt-md-0 p-3 bg-light rounded-3 border">
+                        <h3 class="text-primary mb-0 fw-bold display-6">{{ total_classes_today or 6 }}</h3>
+                        <small class="text-uppercase text-muted fw-bold" style="letter-spacing: 1px;">Classes
+                            Today</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #3498db;">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Students</div>
+                    <div class="h2 mb-0 text-primary">{{ total_students or 45 }}</div>
+                </div>
+                <div class="bg-light p-3 rounded-circle text-primary">
+                    <i class="fas fa-user-graduate fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #e67e22;">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Pending Requests</div>
+                    <div class="h2 mb-0 text-warning">{{ pending_requests }}</div>
+                </div>
+                <div class="bg-light p-3 rounded-circle text-warning">
+                    <i class="fas fa-clock fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #e74c3c;">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">At Risk Students</div>
+                    <div class="h2 mb-0 text-danger">{{ at_risk_students or 2 }}</div>
+                </div>
+                <div class="bg-light p-3 rounded-circle text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Area -->
+<div class="row">
+    <!-- Class Performance -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-chart-line text-primary me-2"></i>
+                    <h5 class="mb-0 fw-bold text-dark">Class Performance Overview</h5>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-dark">Active Students Performance</span>
+                        <span class="text-success fw-bold">92%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 92%"></div>
+                    </div>
+                </div>
+
+                <!-- At-Risk Students -->
+                <div class="mt-4">
+                    <h6 class="mb-3 text-muted text-uppercase fw-bold small">Students Requiring Attention</h6>
+                    {% for student in at_risk_students_list or [] %}
+                    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between mb-3"
+                        role="alert">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white p-2 rounded-circle me-3 text-warning shadow-sm">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div>
+                                <h6 class="alert-heading mb-0 fw-bold text-dark">{{ student.name }} <span
+                                        class="text-muted fw-normal small">({{ student.user_id }})</span></h6>
+                                <p class="mb-0 small text-dark">
+                                    <span class="me-3"><i class="fas fa-calendar-times me-1"></i> Attendance: <strong>{{
+                                            student.attendance_rate }}%</strong></span>
+                                    <span><i class="fas fa-hand-paper me-1"></i> Participation: {{
+                                        student.participation_level }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-circle me-1"></i> At
+                            Risk</span>
+                    </div>
+                    {% endfor %}
+
+                    {% if not at_risk_students_list %}
+                    <div class="text-center py-4 bg-light rounded-3 border border-dashed">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p class="mb-0 text-muted">All students are performing well!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-history text-primary me-2"></i>
+                    <h5 class="mb-0 fw-bold text-dark">Recent Activity</h5>
+                </div>
+            </div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item p-3 border-bottom-0">
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 text-dark">Class Monitoring</h6>
+                        <span class="badge bg-soft-info text-info">Just now</span>
+                    </div>
+                    <p class="mb-1 small text-muted">Behavior analysis running for ongoing classes.</p>
+                </div>
+                <div class="list-group-item p-3 border-bottom-0 bg-light">
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 text-dark">Attendance Requests</h6>
+                        <span class="badge bg-warning text-dark">{{ pending_requests }} Pending</span>
+                    </div>
+                    <p class="mb-1 small text-muted">New attendance change requests received.</p>
+                </div>
+                <div class="list-group-item p-3 border-bottom-0">
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 text-dark">SmartCampus AI Sessions</h6>
+                        <span class="badge bg-success">{{ total_classes_taught or 12 }} Sessions</span>
+                    </div>
+                    <p class="mb-1 small text-muted">Students actively engaging with SmartCampus AI.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function approveRequest(requestId) {
+        // Implementation for approving attendance request
+        alert('Request approved: ' + requestId);
+    }
+
+    function rejectRequest(requestId) {
+        // Implementation for rejecting attendance request
+        alert('Request rejected: ' + requestId);
+    }
+</script>
+
+<style>
+    /* Add subtle specific styles only where needed */
+    .bg-soft-info {
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .text-info {
+        color: #3498db !important;
+    }
+</style>
+{% endblock %}

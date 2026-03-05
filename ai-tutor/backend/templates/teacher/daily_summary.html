@@ -1,0 +1,212 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Daily Summary - SmartCampus AI{% endblock %}
+{% block page_title %}Daily Attendance Summary{% endblock %}
+
+{% block content %}
+<style>
+    .summary-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    .period-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .status-present {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+    .status-late {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: white;
+    }
+
+    .status-absent {
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        color: white;
+    }
+
+    .at-risk-badge {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .hourly-table th {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Date Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3><i class="fas fa-calendar-day me-2"></i>{{ today }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card h-100 status-present">
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ totals['present'] or 0 }}</div>
+                    <div>Present</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card h-100 status-late">
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ totals['late'] or 0 }}</div>
+                    <div>Late</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card h-100 status-absent">
+                <div class="card-body text-center">
+                    <div class="stat-number">{{ totals['absent'] or 0 }}</div>
+                    <div>Absent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hourly Breakdown -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card summary-card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Hourly Attendance Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover hourly-table">
+                            <thead>
+                                <tr>
+                                    <th>Period</th>
+                                    <th>Total</th>
+                                    <th>Present</th>
+                                    <th>Late</th>
+                                    <th>Absent</th>
+                                    <th>Attendance %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hour in hourly_breakdown %}
+                                <tr>
+                                    <td>
+                                        <span class="period-badge bg-primary">{{ hour.period }}</span>
+                                    </td>
+                                    <td>{{ hour.total }}</td>
+                                    <td><span class="badge bg-success">{{ hour.present }}</span></td>
+                                    <td><span class="badge bg-warning">{{ hour.late }}</span></td>
+                                    <td><span class="badge bg-danger">{{ hour.absent }}</span></td>
+                                    <td>
+                                        {% if hour.total > 0 %}
+                                        {% set rate = ((hour.present + hour.late) / hour.total * 100)|round(1) %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if rate >= 75 %}bg-success{% elif rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                style="width: {{ rate }}%">{{ rate }}%</div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">No data</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Pending Correction Requests -->
+        <div class="col-md-6 mb-4">
+            <div class="card summary-card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Pending Correction Requests</h5>
+                    <span class="badge bg-warning">{{ pending_requests|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if pending_requests %}
+                    <div class="list-group list-group-flush">
+                        {% for req in pending_requests[:5] %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ req.student_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ req.date }} - {{ req.reason[:50] }}...</small>
+                            </div>
+                            <a href="{{ url_for('teacher_attendance_requests') }}"
+                                class="btn btn-sm btn-outline-primary">Review</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No pending requests</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- At-Risk Students -->
+        <div class="col-md-6 mb-4">
+            <div class="card summary-card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>At-Risk Students</h5>
+                    <span class="badge bg-danger">{{ at_risk_students|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if at_risk_students %}
+                    <div class="list-group list-group-flush">
+                        {% for student in at_risk_students %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ student.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ student.department }} - {{ student.batch }}</small>
+                            </div>
+                            <span class="at-risk-badge">{{ student.attendance_rate }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-success text-center mb-0"><i class="fas fa-check-circle me-2"></i>All students above
+                        75% attendance</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,360 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Add New User - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin: 20px 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .role-highlight {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .role-student {
+        border-left-color: #3498db;
+    }
+
+    .role-teacher {
+        border-left-color: #f39c12;
+    }
+
+    .role-admin {
+        border-left-color: #e74c3c;
+    }
+
+    .prefix-warning {
+        display: none;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+
+    .prefix-error {
+        display: none;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+
+    .dropdown-option {
+        padding: 8px 12px;
+    }
+
+    .custom-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+</style>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <h2 class="mb-4 text-center">
+                    <i class="fas fa-user-plus me-2"></i>Add New User
+                </h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                    role="alert">
+                    <i
+                        class="fas fa-{% if category == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" id="addUserForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="user_id" class="form-label">User ID *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                    <input type="text" class="form-control" id="user_id" name="user_id" required
+                                        placeholder="e.g., student001, teacher001">
+                                </div>
+                                <div id="userIdWarning" class="prefix-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <strong>Warning:</strong> User ID should start with role prefix
+                                    (student/teacher/admin)
+                                </div>
+                                <div id="userIdError" class="prefix-error">
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    <strong>Error:</strong> <span id="errorMessage"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" class="form-control" id="phone" name="phone" pattern="[0-9]{10}"
+                                        title="Please enter a 10-digit phone number" required>
+                                </div>
+                                <div class="form-text">10-digit number (e.g. 9876543210)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Role *</label>
+                                <select class="form-select custom-select" id="role" name="role" required
+                                    onchange="toggleFields(); validateUserIdPrefix()">
+                                    <option value="">Select Role</option>
+                                    <option value="student">Student</option>
+                                    <option value="teacher">Teacher</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="department" class="form-label">Department *</label>
+                                <select class="form-select custom-select" id="department" name="department">
+                                    <option value="">Select Department</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Mathematics Engineering">Mathematics Engineering</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Management">Management</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="batchFieldContainer">
+                            <div class="mb-3">
+                                <label for="batch" class="form-label">Batch <span
+                                        class="required-indicator">*</span></label>
+                                <select class="form-select custom-select" id="batch" name="batch">
+                                    <option value="">Select Batch</option>
+                                    <option value="2024-2028">2024-2028 (4 Year)</option>
+                                    <option value="2025-2029">2025-2029 (4 Year)</option>
+                                    <option value="2023-2027">2023-2027 (4 Year)</option>
+                                    <option value="2022-2026">2022-2026 (4 Year)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="semesterFieldContainer">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">Semester <span
+                                        class="required-indicator">*</span></label>
+                                <select class="form-select custom-select" id="semester" name="semester">
+                                    <option value="">Select Semester</option>
+                                    <option value="Semester 1">Semester 1</option>
+                                    <option value="Semester 2">Semester 2</option>
+                                    <option value="Semester 3">Semester 3</option>
+                                    <option value="Semester 4">Semester 4</option>
+                                    <option value="Semester 5">Semester 5</option>
+                                    <option value="Semester 6">Semester 6</option>
+                                    <option value="Semester 7">Semester 7</option>
+                                    <option value="Semester 8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 student-only">
+                            <div class="mb-3">
+                                <label for="parent_name" class="form-label">Parent's Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
+                                    <input type="text" class="form-control" id="parent_name" name="parent_name">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 student-only">
+                            <div class="mb-3">
+                                <label for="parent_phone" class="form-label">Parent's Phone *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
+                                    <input type="tel" class="form-control" id="parent_phone" name="parent_phone"
+                                        pattern="[0-9]{10}" title="Please enter a 10-digit phone number">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save me-1"></i>Create User & Proceed to Biometric Auth
+                        </button>
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Users
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFields() {
+        const role = document.getElementById('role').value;
+        const formContainer = document.querySelector('.form-container');
+
+        // Remove all role classes
+        formContainer.classList.remove('role-student', 'role-teacher', 'role-admin');
+
+        // Add appropriate role class for highlighting
+        if (role) {
+            formContainer.classList.add(`role-${role}`);
+        }
+
+        // Get field containers and required indicators
+        const batchContainer = document.getElementById('batchFieldContainer');
+        const semesterContainer = document.getElementById('semesterFieldContainer');
+        const studentOnlyFields = document.querySelectorAll('.student-only');
+        const departmentSelect = document.getElementById('department');
+        const batchSelect = document.getElementById('batch');
+        const semesterSelect = document.getElementById('semester');
+        const parentNameInput = document.getElementById('parent_name');
+        const parentPhoneInput = document.getElementById('parent_phone');
+        const requiredIndicators = document.querySelectorAll('.required-indicator');
+
+        if (role === 'admin' || role === 'teacher') {
+            // Hide batch and semester for teachers/admins
+            batchContainer.style.display = 'none';
+            semesterContainer.style.display = 'none';
+            studentOnlyFields.forEach(f => f.style.display = 'none');
+
+            // Remove required attribute
+            departmentSelect.required = false;
+            batchSelect.required = false;
+            semesterSelect.required = false;
+            parentNameInput.required = false;
+            parentPhoneInput.required = false;
+
+            // Clear values
+            batchSelect.value = '';
+            semesterSelect.value = '';
+            parentNameInput.value = '';
+            parentPhoneInput.value = '';
+
+            // Hide required indicators
+            requiredIndicators.forEach(ind => ind.style.display = 'none');
+        } else {
+            // Show batch and semester for students
+            batchContainer.style.display = 'block';
+            semesterContainer.style.display = 'flex'; // row uses flex
+            studentOnlyFields.forEach(f => f.style.display = 'block');
+
+            // Make required
+            departmentSelect.required = true;
+            batchSelect.required = true;
+            semesterSelect.required = true;
+            parentNameInput.required = true;
+            parentPhoneInput.required = true;
+
+            // Show required indicators
+            requiredIndicators.forEach(ind => ind.style.display = 'inline');
+        }
+    }
+
+    function validateUserIdPrefix() {
+        const userId = document.getElementById('user_id').value.toLowerCase();
+        const role = document.getElementById('role').value;
+        const warningDiv = document.getElementById('userIdWarning');
+        const errorDiv = document.getElementById('userIdError');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Reset all states
+        warningDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        submitBtn.disabled = false;  // Always enable the button
+
+        if (!userId || !role) return;
+
+        // Check if user ID starts with correct prefix - just show warning, don't block
+        const expectedPrefix = role;
+        const isValidPrefix = userId.startsWith(expectedPrefix);
+
+        if (!isValidPrefix && userId.length > 0) {
+            // Show warning only, don't block submission
+            errorMessage.textContent = `Hint: ${role.charAt(0).toUpperCase() + role.slice(1)} User ID should start with "${expectedPrefix}"`;
+            warningDiv.style.display = 'block';
+        } else if (userId === expectedPrefix) {
+            // Show warning for incomplete ID
+            warningDiv.textContent = 'Warning: Please complete the User ID (e.g., teacher001)';
+            warningDiv.style.display = 'block';
+        }
+    }
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        const userIdInput = document.getElementById('user_id');
+        const roleSelect = document.getElementById('role');
+
+        userIdInput.addEventListener('input', validateUserIdPrefix);
+        roleSelect.addEventListener('change', function () {
+            toggleFields();
+            validateUserIdPrefix();
+        });
+
+        // Initialize field states
+        toggleFields();
+    });
+</script>
+{% endblock %}

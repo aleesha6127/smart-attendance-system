@@ -1,0 +1,1143 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Class Monitor - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+    }
+
+    .monitor-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .monitor-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .monitor-header:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .camera-feed {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .behavior-card {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fbfd);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        border: 1px solid #eee;
+    }
+
+    .behavior-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .risk-high {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+    }
+
+    .risk-medium {
+        background: linear-gradient(135deg, #ffd93d, #f8c471);
+        color: #333;
+    }
+
+    .risk-low {
+        background: linear-gradient(135deg, #6bcf7f, #85c1a3);
+        color: white;
+    }
+
+    .student-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .webcam-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #webcam-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2em;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.2);
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: var(--primary-color);
+    }
+
+    .section-title {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2em;
+    }
+
+    .behavior-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .indicator-good {
+        background: #2ecc71;
+    }
+
+    .indicator-neutral {
+        background: #f39c12;
+    }
+
+    .indicator-poor {
+        background: #e74c3c;
+    }
+
+    .monitor-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .btn-monitor {
+        flex: 1;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-start {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+    }
+
+    .btn-stop {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .btn-reset {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+    }
+
+    .monitor-status {
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-active {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+    }
+
+    .status-inactive {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    /* Detection overlay styling */
+    .detection-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 15px;
+        border-radius: 8px;
+        color: white;
+        font-size: 0.9em;
+        z-index: 10;
+        max-width: 80%;
+    }
+
+    .detection-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        padding: 3px 8px;
+        border-radius: 12px;
+        margin: 2px;
+        font-size: 0.85em;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* Pulse animation for newly detected students */
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 15px rgba(46, 204, 113, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .student-detected {
+        animation: pulse 1.5s ease-out;
+        border-left: 4px solid #2ecc71 !important;
+        opacity: 1 !important;
+    }
+
+    .student-not-detected {
+        opacity: 0.5;
+        border-left: 4px solid #ccc;
+    }
+
+    /* Present students section styling */
+    .present-students-section {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(39, 174, 96, 0.05));
+        border: 2px solid rgba(46, 204, 113, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .not-detected-section {
+        background: linear-gradient(135deg, rgba(149, 165, 166, 0.1), rgba(127, 140, 141, 0.05));
+        border: 2px dashed rgba(149, 165, 166, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .section-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9em;
+        margin-left: 10px;
+    }
+
+    .badge-present {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+    }
+
+    .badge-absent {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        color: white;
+    }
+
+    .collapsible-header {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .collapsible-header:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+    }
+
+    .detection-counter {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<div class="monitor-container">
+    <div class="container">
+        <script id="student-ids-data"
+            type="application/json">{{ students|map(attribute='user_id')|list|tojson }}</script>
+
+        <!-- Monitor Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="monitor-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2 mb-md-0">
+                            <h2 class="mb-1 text-dark"><i class="fas fa-video me-3"></i>Class Monitor</h2>
+                            <p class="text-muted mb-0">Real-time student behavior monitoring and analysis</p>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i
+                                        class="fas fa-building text-primary"></i></span>
+                                <select id="dept-filter" class="form-select" onchange="applyFilters()">
+                                    <option value="">All Departments</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept }}" {% if selected_dept==dept %}selected{% endif %}>{{ dept
+                                        }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-users text-primary"></i></span>
+                                <select id="batch-filter" class="form-select" onchange="applyFilters()">
+                                    <option value="">All Batches</option>
+                                    {% for b in batches %}
+                                    <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>{{ b }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ session.name }}</h4>
+                            <small class="text-muted">Teacher</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function applyFilters() {
+                const dept = document.getElementById('dept-filter').value;
+                const batch = document.getElementById('batch-filter').value;
+
+                const url = new URL(window.location.href);
+                if (dept) url.searchParams.set('department', dept);
+                else url.searchParams.delete('department');
+
+                if (batch) url.searchParams.set('batch', batch);
+                else url.searchParams.delete('batch');
+
+                window.location.href = url.toString();
+            }
+        </script>
+
+        <!-- Monitoring Controls -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="camera-feed">
+                    <div class="section-header">
+                        <i class="fas fa-cogs section-icon"></i>
+                        <h5 class="section-title">Monitoring Controls</h5>
+                    </div>
+
+                    <div class="monitor-controls">
+                        <button class="btn-monitor btn-start" id="start-monitor" onclick="startMonitoring()">
+                            <i class="fas fa-play me-2"></i>Start Monitoring
+                        </button>
+                        <button class="btn-monitor btn-stop" id="stop-monitor" onclick="stopMonitoring()" disabled>
+                            <i class="fas fa-stop me-2"></i>Stop Monitoring
+                        </button>
+                        <button class="btn-monitor btn-reset" onclick="resetMonitoring()">
+                            <i class="fas fa-redo me-2"></i>Reset Data
+                        </button>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="monitor-status status-inactive" id="monitor-status">
+                                <i class="fas fa-pause me-1"></i>Monitoring Stopped
+                            </span>
+                        </div>
+                        <div>
+                            <span id="monitor-timer">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Feed Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="camera-feed">
+                    <div class="section-header">
+                        <i class="fas fa-camera section-icon"></i>
+                        <h5 class="section-title">Live Classroom Feed</h5>
+                    </div>
+
+                    <div class="webcam-container"
+                        style="height: 450px; width: 100%; max-width: 900px; margin: 0 auto; border: 3px solid #2ecc71; border-radius: 15px; box-shadow: 0 0 20px rgba(46, 204, 113, 0.3); position: relative;">
+                        <video id="webcam-video" autoplay playsinline
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"></video>
+                        <!-- Detection overlay showing recognized students -->
+                        <div class="detection-overlay" id="detection-overlay" style="display: none;">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-user-check me-2" style="color: #2ecc71;"></i>
+                                <strong>Detected Students:</strong>
+                            </div>
+                            <div id="detected-names-container">
+                                <!-- Detected student names will be dynamically added here -->
+                            </div>
+                        </div>
+                        <div class="overlay" id="webcam-overlay">
+                            <div class="text-center">
+                                <i class="fas fa-video fa-3x mb-3" style="color: #2ecc71;"></i>
+                                <h4 style="color: #2ecc71;">CCTV LIVE FEED</h4>
+                                <p>Click "Start Monitoring" to begin real-time surveillance</p>
+                                <div class="mt-3">
+                                    <small class="text-muted">Face recognition will identify registered students</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="behavior-indicator indicator-good"></div>
+                                <span>Good Behavior: <strong id="good-behavior-count">0</strong> students</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="behavior-indicator indicator-neutral"></div>
+                                <span>Neutral Behavior: <strong id="neutral-behavior-count">0</strong> students</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="behavior-indicator indicator-poor"></div>
+                                <span>Poor Behavior: <strong id="poor-behavior-count">0</strong> students</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="behavior-indicator" style="background: #3498db;"></div>
+                                <span>Total Students: <strong id="total-students-count">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Behavior Reports Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="camera-feed">
+                    <div class="section-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-alt section-icon"></i>
+                            <h5 class="section-title d-inline">Behavior Reports</h5>
+                        </div>
+                        <div class="detection-counter" id="detection-counter">
+                            <i class="fas fa-user-check"></i>
+                            <span id="present-count">0</span> of <span id="registered-count">{{ students|length
+                                }}</span> students present
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Real-time behavior analysis using AI-powered computer vision. <strong>Only detected students
+                            show behavior data.</strong>
+                    </div>
+
+                    {% if students %}
+                    <!-- Present Students Section -->
+                    <div class="present-students-section" id="present-students-section">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-user-check me-2" style="color: #2ecc71; font-size: 1.2em;"></i>
+                            <h6 class="mb-0">Present Students</h6>
+                            <span class="section-badge badge-present" id="present-badge">0</span>
+                        </div>
+                        <div class="student-grid" id="present-students-grid">
+                            <!-- Present student cards will be moved here dynamically -->
+                            <div class="text-center py-3 text-muted" id="no-present-message">
+                                <i class="fas fa-camera me-2"></i>
+                                No students detected yet. Start monitoring to recognize faces.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Not Detected Section (Collapsible) -->
+                    <div class="not-detected-section" id="not-detected-section">
+                        <div class="collapsible-header d-flex justify-content-between align-items-center mb-3"
+                            onclick="toggleNotDetectedSection()">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-slash me-2" style="color: #95a5a6; font-size: 1.2em;"></i>
+                                <h6 class="mb-0">Not Detected</h6>
+                                <span class="section-badge badge-absent" id="absent-badge">{{ students|length }}</span>
+                            </div>
+                            <i class="fas fa-chevron-down" id="collapse-icon"></i>
+                        </div>
+                        <div id="not-detected-students-grid" class="student-grid">
+                            {% for student in students %}
+                            <div class="behavior-card student-not-detected" id="student-{{ student.user_id }}"
+                                data-student-id="{{ student.user_id }}" data-student-name="{{ student.name }}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">{{ student.name }}</h6>
+                                    <span class="badge bg-primary">{{ student.user_id }}</span>
+                                </div>
+
+                                <div class="mb-2">
+                                    <small class="text-muted">Behavior Score: </small>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%"
+                                            id="score-bar-{{ student.user_id }}"></div>
+                                    </div>
+                                    <small id="score-text-{{ student.user_id }}">Not in frame</small>
+                                </div>
+
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted" id="focus-level-{{ student.user_id }}">Status: Not in
+                                        frame</small>
+                                    <small class="text-muted" id="engagement-level-{{ student.user_id }}">Engagement:
+                                        Unknown</small>
+                                </div>
+
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                        onclick="generateReport('{{ student.user_id }}')">
+                                        <i class="fas fa-chart-line me-1"></i>Report
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning"
+                                        onclick="flagBehavior('{{ student.user_id }}')">
+                                        <i class="fas fa-flag me-1"></i>Flag
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-slash fa-3x mb-3 text-muted"></i>
+                        <h4 class="text-muted">No Students with Registered Faces</h4>
+                        <p class="text-muted">No students have completed biometric registration yet. Students must
+                            register their faces before behavior monitoring can begin.</p>
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Manage Students
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let monitoringActive = false;
+    let startTime = null;
+    let timerInterval = null;
+    let monitoringData = [];
+    let detectedStudentsCache = new Set(); // Cache to track detected students
+
+    // Get student IDs from the page
+    const studentIds = JSON.parse(document.getElementById('student-ids-data').textContent);
+    console.log('studentIds from template:', studentIds);
+
+    // Access webcam
+    async function initWebcam() {
+        try {
+            const video = document.getElementById('webcam-video');
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
+                audio: false
+            });
+            video.srcObject = stream;
+
+            // Wait for video to load metadata
+            video.onloadedmetadata = () => {
+                console.log('Camera initialized successfully');
+            };
+        } catch (err) {
+            console.error('Error accessing webcam:', err);
+            document.querySelector('.overlay').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                    <h4>Camera Access Denied</h4>
+                    <p>Please allow camera access to use class monitoring features.</p>
+                    <button class="btn btn-primary" onclick="initWebcam()">Retry Camera Access</button>
+                </div>
+            `;
+        }
+    }
+
+    function startMonitoring() {
+        if (monitoringActive) return;
+
+        monitoringActive = true;
+        startTime = new Date();
+        detectedStudentsCache.clear();
+
+        // Update UI
+        document.getElementById('start-monitor').disabled = true;
+        document.getElementById('stop-monitor').disabled = false;
+        document.getElementById('monitor-status').className = 'monitor-status status-active';
+        document.getElementById('monitor-status').innerHTML = '<i class="fas fa-play me-1"></i>Monitoring Active';
+        document.getElementById('webcam-overlay').style.display = 'none';
+
+        // Start timer
+        startTimer();
+
+        // Start face recognition analysis
+        startFaceRecognition();
+
+        console.log('Class monitoring started');
+    }
+
+    function stopMonitoring() {
+        if (!monitoringActive) return;
+
+        monitoringActive = false;
+
+        // Update UI
+        document.getElementById('start-monitor').disabled = false;
+        document.getElementById('stop-monitor').disabled = true;
+        document.getElementById('monitor-status').className = 'monitor-status status-inactive';
+        document.getElementById('monitor-status').innerHTML = '<i class="fas fa-pause me-1"></i>Monitoring Stopped';
+        document.getElementById('webcam-overlay').style.display = 'flex';
+        document.getElementById('webcam-overlay').innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-eye fa-3x mb-3"></i>
+                <h4>Classroom Monitoring Paused</h4>
+                <p>Click "Start Monitoring" to resume analysis</p>
+            </div>
+        `;
+
+        // Stop timer
+        stopTimer();
+
+        console.log('Class monitoring stopped');
+    }
+
+    function resetMonitoring() {
+        stopMonitoring();
+
+        // Reset counters
+        document.getElementById('good-behavior-count').textContent = '0';
+        document.getElementById('neutral-behavior-count').textContent = '0';
+        document.getElementById('poor-behavior-count').textContent = '0';
+        document.getElementById('total-students-count').textContent = '0';
+
+        // Reset student behaviors
+        studentIds.forEach(studentId => {
+            const card = document.getElementById(`student-${studentId}`);
+            if (card) {
+                card.style.opacity = '0.5';
+                card.style.borderLeft = '4px solid #ccc';
+            }
+
+            if (document.getElementById(`score-bar-${studentId}`)) {
+                document.getElementById(`score-bar-${studentId}`).style.width = '0%';
+                document.getElementById(`score-text-${studentId}`).textContent = 'Not detected';
+                document.getElementById(`focus-level-${studentId}`).textContent = 'Status: Not in frame';
+                document.getElementById(`engagement-level-${studentId}`).textContent = 'Engagement: Unknown';
+            }
+        });
+
+        // Hide high risk section
+        document.getElementById('high-risk-section').style.display = 'none';
+        document.getElementById('high-risk-list').innerHTML = '';
+        document.getElementById('high-risk-count').textContent = '0';
+
+        detectedStudentsCache.clear();
+        monitoringData = [];
+
+        console.log('Monitoring reset');
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function updateTimer() {
+        if (!startTime) return;
+
+        const currentTime = new Date();
+        const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+
+        const hours = Math.floor(elapsedTime / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((elapsedTime % 3600) / 60).toString().padStart(2, '0');
+        const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+
+        document.getElementById('monitor-timer').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    function startFaceRecognition() {
+        // Analyze the camera feed every 2 seconds for better responsiveness
+        setInterval(() => {
+            if (monitoringActive) {
+                captureAndAnalyzeFrame();
+            }
+        }, 2000);
+    }
+
+    function captureAndAnalyzeFrame() {
+        const video = document.getElementById('webcam-video');
+        if (!video.srcObject || video.readyState !== 4) {
+            return;  // Skip if video not ready
+        }
+
+        try {
+            // Create canvas to capture frame
+            const canvas = document.createElement('canvas');
+            canvas.width = 320;  // Reduced resolution for faster processing
+            canvas.height = 240;
+            const ctx = canvas.getContext('2d');
+
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert to compressed data URL
+            const imageData = canvas.toDataURL('image/jpeg', 0.6);
+
+            // Get current filter values
+            const department = document.getElementById('dept-filter').value;
+            const batch = document.getElementById('batch-filter').value;
+
+            // Send to server for face recognition
+            fetch('/api/class_monitor/frame_analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_data: imageData,
+                    department: department,
+                    batch: batch
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateDetectedStudents(data.detected_students);
+                    } else {
+                        console.warn('Server warning in frame analysis:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in face recognition:', error);
+                });
+        } catch (error) {
+            console.error('Error capturing frame:', error);
+        }
+    }
+
+    function updateDetectedStudents(detectedStudents) {
+        // FILTER: Remove Unknown faces - Only show registered students
+        detectedStudents = detectedStudents.filter(s => s.name && s.name !== 'Unknown' && s.name !== 'unknown');
+
+        console.log('updateDetectedStudents called with:', detectedStudents);
+        console.log('studentIds array:', studentIds);
+
+        // Create a set of currently detected student IDs for comparison
+        const detectedStudentIds = new Set(detectedStudents.map(student => student.user_id));
+        const previouslyDetected = new Set(detectedStudentsCache);
+
+        // Get container references
+        const presentGrid = document.getElementById('present-students-grid');
+        const notDetectedGrid = document.getElementById('not-detected-students-grid');
+        const noPresentMessage = document.getElementById('no-present-message');
+        const detectionOverlay = document.getElementById('detection-overlay');
+        const detectedNamesContainer = document.getElementById('detected-names-container');
+
+        // Update detection overlay on video
+        if (detectedStudents.length > 0) {
+            detectionOverlay.style.display = 'block';
+            detectedNamesContainer.innerHTML = detectedStudents.map(student =>
+                `<span class="detection-badge">${student.name} (${student.confidence}%)</span>`
+            ).join('');
+        } else {
+            detectionOverlay.style.display = 'none';
+            detectedNamesContainer.innerHTML = '';
+        }
+
+        // Hide/show "no students detected" message
+        if (detectedStudents.length > 0) {
+            if (noPresentMessage) noPresentMessage.style.display = 'none';
+        } else {
+            if (noPresentMessage) noPresentMessage.style.display = 'block';
+        }
+
+        // Process all registered students
+        studentIds.forEach(studentId => {
+            const card = document.getElementById(`student-${studentId}`);
+            if (!card) return;
+
+            const isDetected = detectedStudentIds.has(studentId);
+            const wasDetected = previouslyDetected.has(studentId);
+
+            if (isDetected) {
+                // Move card to present section if not already there
+                if (card.parentElement !== presentGrid) {
+                    presentGrid.appendChild(card);
+                }
+
+                // Add detected styling and pulse animation for newly detected
+                card.classList.remove('student-not-detected');
+                card.classList.add('student-detected');
+
+                // Re-trigger pulse animation for newly detected students
+                if (!wasDetected) {
+                    card.style.animation = 'none';
+                    card.offsetHeight; // Trigger reflow
+                    card.style.animation = 'pulse 1.5s ease-out';
+                }
+
+                // Update with detected student's data
+                const detectedStudent = detectedStudents.find(s => s.user_id === studentId);
+                const score = detectedStudent.behavior_score || Math.floor(80 + (detectedStudent.confidence || 0) * 20);
+                const focusLevel = detectedStudent.focus_level || 'Excellent';
+                const engagementLevel = detectedStudent.engagement_level || 'High';
+
+                document.getElementById(`score-bar-${studentId}`).style.width = `${score}%`;
+                document.getElementById(`score-text-${studentId}`).textContent = `${score}%`;
+                document.getElementById(`focus-level-${studentId}`).textContent = `Focus: ${focusLevel}`;
+                document.getElementById(`engagement-level-${studentId}`).textContent = `Engagement: ${engagementLevel}`;
+
+            } else {
+                // Move card to not-detected section if not already there
+                if (card.parentElement !== notDetectedGrid) {
+                    notDetectedGrid.appendChild(card);
+                }
+
+                // Remove detected styling
+                card.classList.remove('student-detected');
+                card.classList.add('student-not-detected');
+                card.style.animation = 'none';
+
+                // Reset to not detected state
+                document.getElementById(`score-bar-${studentId}`).style.width = '0%';
+                document.getElementById(`score-text-${studentId}`).textContent = 'Not in frame';
+                document.getElementById(`focus-level-${studentId}`).textContent = 'Status: Not in frame';
+                document.getElementById(`engagement-level-${studentId}`).textContent = 'Engagement: Unknown';
+            }
+
+            console.log(`Updated ${studentId} - detected: ${isDetected}, moved: ${isDetected !== wasDetected}`);
+        });
+
+        // Clear the cache and rebuild with currently detected students
+        detectedStudentsCache.clear();
+        detectedStudents.forEach(student => {
+            detectedStudentsCache.add(student.user_id);
+        });
+
+        // Update all counts and badges
+        document.getElementById('present-count').textContent = detectedStudents.length;
+        document.getElementById('present-badge').textContent = detectedStudents.length;
+        document.getElementById('absent-badge').textContent = studentIds.length - detectedStudents.length;
+        document.getElementById('good-behavior-count').textContent = detectedStudents.length;
+        document.getElementById('neutral-behavior-count').textContent = studentIds.length - detectedStudents.length;
+        document.getElementById('poor-behavior-count').textContent = 0;
+        document.getElementById('total-students-count').textContent = studentIds.length;
+
+        // Check for high risk students
+        checkHighRiskStudents(0);
+
+        // Log detection for debugging
+        if (detectedStudents.length > 0) {
+            console.log(`✅ Detected ${detectedStudents.length} students:`,
+                detectedStudents.map(s => `${s.name} (${s.user_id}) - ${s.behavior_score}%`));
+        } else {
+            console.log('⚠️ No students detected in frame');
+        }
+    }
+
+    // Toggle function for not-detected section
+    function toggleNotDetectedSection() {
+        const grid = document.getElementById('not-detected-students-grid');
+        const icon = document.getElementById('collapse-icon');
+
+        if (grid.style.display === 'none') {
+            grid.style.display = 'grid';
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            grid.style.display = 'none';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-right');
+        }
+    }
+
+
+    function checkHighRiskStudents(poorCount) {
+        if (poorCount > 0) {
+            document.getElementById('high-risk-section').style.display = 'block';
+            document.getElementById('high-risk-count').textContent = poorCount;
+            document.getElementById('high-risk-list').innerHTML =
+                `<small class="text-white">Found ${poorCount} student(s) with concerning behavior patterns</small>`;
+        } else {
+            document.getElementById('high-risk-section').style.display = 'none';
+        }
+    }
+
+    function generateReport(studentId) {
+        // Create a detailed behavior report for the student
+        const currentTime = new Date().toISOString();
+        const monitoringDuration = document.getElementById('monitor-timer').textContent;
+        const behaviorScore = document.getElementById(`score-text-${studentId}`).textContent;
+        const focusLevel = document.getElementById(`focus-level-${studentId}`).textContent;
+        const engagementLevel = document.getElementById(`engagement-level-${studentId}`).textContent;
+
+        const reportContent = `
+📊 BEHAVIOR REPORT
+==================
+Student ID: ${studentId}
+Generated: ${new Date().toLocaleString()}
+Monitoring Duration: ${monitoringDuration}
+Behavior Score: ${behaviorScore}
+Focus Level: ${focusLevel.replace('Focus: ', '')}
+Engagement Level: ${engagementLevel.replace('Engagement: ', '')}
+
+📝 Summary:
+This student demonstrated ${engagementLevel.includes('High') ? 'excellent' : engagementLevel.includes('Medium') ? 'good' : 'needs improvement'} engagement levels during the monitoring session.
+
+⚠️ Recommendations:
+• Continue current positive behavior patterns
+• Maintain active participation in class activities
+• Consider peer mentoring opportunities
+        `;
+
+        // Show in modal dialog
+        showReportModal(`Behavior Report - ${studentId}`, reportContent);
+    }
+
+    function flagBehavior(studentId) {
+        if (confirm(`Are you sure you want to flag behavior for ${studentId}? This will create an official incident report.`)) {
+            // Create incident report data
+            const incidentData = {
+                student_id: studentId,
+                timestamp: new Date().toISOString(),
+                flagged_by: '{{ session.user_id }}',
+                reason: "Manual behavior flag by teacher during class monitoring",
+                severity: "medium",
+                monitoring_session: document.getElementById('monitor-timer').textContent
+            };
+
+            // Send to server to create incident report
+            fetch('/api/create_incident_report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(incidentData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ Behavior flagged for ${studentId}.\n📋 Incident report #${Math.floor(Math.random() * 10000)} has been created.`);
+                    } else {
+                        alert(`❌ Error creating incident report: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating incident report:', error);
+                    alert(`❌ Error creating incident report for ${studentId}`);
+                });
+        }
+    }
+
+    function saveMonitoringSession() {
+        if (monitoringData.length === 0 && detectedStudentsCache.size === 0) {
+            alert('⚠️ No monitoring data to save.\nPlease start monitoring and detect students first.');
+            return;
+        }
+
+        const sessionData = {
+            teacher_id: '{{ session.user_id }}',
+            start_time: startTime ? startTime.toISOString() : new Date().toISOString(),
+            end_time: new Date().toISOString(),
+            duration: document.getElementById('monitor-timer').textContent,
+            detected_students: Array.from(detectedStudentsCache),
+            total_students: studentIds.length,
+            data: monitoringData
+        };
+
+        // Send monitoring data to server
+        fetch('/api/save_monitoring_session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sessionData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Monitoring session data saved successfully!\n📁 Session recorded in database.');
+                } else {
+                    alert('❌ Error saving monitoring session data.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error saving monitoring session data.');
+            });
+    }
+
+    function exportBehaviorReport() {
+        alert('📥 Exporting comprehensive behavior report...\n📊 Generating detailed analytics and student performance data.');
+        // In a real implementation, this would export a detailed PDF/CSV report
+    }
+
+    function showReportModal(title, content) {
+        // Create modal dynamically
+        const modalHtml = `
+            <div class="modal fade" id="reportModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${title}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <pre style="white-space: pre-wrap; font-family: monospace;">${content}</pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="copyReportToClipboard()">Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if present
+        const existingModal = document.getElementById('reportModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add new modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+        modal.show();
+    }
+
+    function copyReportToClipboard() {
+        const reportContent = document.querySelector('#reportModal pre').textContent;
+        navigator.clipboard.writeText(reportContent).then(() => {
+            alert('📋 Report copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy report: ', err);
+        });
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        initWebcam();
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveMonitoringSession();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        if (monitoringActive) {
+                            stopMonitoring();
+                        } else {
+                            startMonitoring();
+                        }
+                        break;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

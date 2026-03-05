@@ -1,0 +1,143 @@
+# Cloud Computing Fundamentals Course Notes
+
+## Introduction to Cloud Computing
+Cloud computing is the delivery of computing services—including servers, storage, databases, networking, software, analytics, and intelligence—over the Internet ("the cloud") to offer faster innovation, flexible resources, and economies of scale.
+
+### Definition
+Cloud computing is the on-demand availability of computer system resources, especially data storage and computing power, without direct active management by the user.
+
+## Cloud Service Models
+
+### Infrastructure as a Service (IaaS)
+- Provides virtualized computing resources over the internet
+- Examples: Amazon EC2, Microsoft Azure VMs, Google Compute Engine
+- Offers flexibility and control over operating systems and applications
+
+### Platform as a Service (PaaS)
+- Provides hardware and software tools over the internet
+- Typically used for application development and deployment
+- Examples: Google App Engine, Microsoft Azure App Services, Heroku
+
+### Software as a Service (SaaS)
+- Delivers software applications over the internet on a subscription basis
+- Examples: Gmail, Salesforce, Dropbox, Office 365
+- Eliminates need for organizations to install and run applications locally
+
+## Cloud Deployment Models
+
+### Public Cloud
+- Services offered over the public internet
+- Owned and operated by third-party cloud service providers
+- Examples: Amazon Web Services (AWS), Microsoft Azure, Google Cloud Platform
+
+### Private Cloud
+- Computing resources used exclusively by a single business or organization
+- Can be physically located at organization's data center
+- Provides greater control and security
+
+### Hybrid Cloud
+- Combines public and private clouds
+- Allows data and applications to be shared between them
+- Offers greater flexibility and deployment options
+
+### Community Cloud
+- Shared infrastructure for organizations with common concerns
+- May be managed internally or by third parties
+- Provides shared resources for specific communities
+
+## Benefits of Cloud Computing
+
+### Cost Effectiveness
+- Reduced capital expenditure on hardware and software
+- Pay-as-you-go pricing model
+- Lower maintenance costs
+
+### Scalability
+- Ability to scale up or down based on demand
+- Automatic scaling features
+- Elastic resources
+
+### Accessibility
+- Access data and applications from anywhere
+- Supports remote work
+- Multiple device compatibility
+
+### Reliability
+- High availability and disaster recovery
+- Built-in redundancy
+- Service level agreements (SLAs)
+
+### Maintenance
+- Managed by cloud provider
+- Automatic updates and patches
+- Reduced IT overhead
+
+## Major Cloud Providers
+
+### Amazon Web Services (AWS)
+- Market leader in cloud computing
+- Comprehensive suite of cloud services
+- Global infrastructure
+
+### Microsoft Azure
+- Strong integration with Microsoft products
+- Hybrid cloud capabilities
+- Enterprise-focused solutions
+
+### Google Cloud Platform (GCP)
+- Strong in data analytics and machine learning
+- Integration with Google services
+- Competitive pricing
+
+### IBM Cloud
+- Focus on enterprise solutions
+- Strong in AI and analytics
+- Hybrid cloud approach
+
+## Security in Cloud Computing
+
+### Shared Responsibility Model
+- Division of security responsibilities between provider and customer
+- Provider responsible for security OF the cloud
+- Customer responsible for security IN the cloud
+
+### Key Security Considerations
+- Data encryption (in transit and at rest)
+- Identity and access management
+- Network security
+- Compliance and governance
+- Incident response
+
+## Cloud Computing Technologies
+
+### Virtualization
+- Foundation of cloud computing
+- Enables resource pooling and allocation
+- Hypervisors and containers
+
+### Containerization
+- Lightweight virtualization technology
+- Docker and Kubernetes
+- Microservices architecture
+
+### Serverless Computing
+- Event-driven execution model
+- No server management required
+- Automatic scaling
+
+## Future Trends in Cloud Computing
+
+### Edge Computing
+- Processing data closer to source
+- Reduced latency
+- IoT integration
+
+### Multi-Cloud Strategies
+- Using multiple cloud providers
+- Avoiding vendor lock-in
+- Optimizing performance and cost
+
+### Artificial Intelligence Integration
+- AI-powered cloud services
+- Automated management
+- Intelligent analytics

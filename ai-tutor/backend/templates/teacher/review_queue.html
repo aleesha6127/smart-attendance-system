@@ -1,0 +1,181 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Review Queue - SmartCampus AI{% endblock %}
+{% block page_title %}Attendance Review Queue{% endblock %}
+
+{% block content %}
+<style>
+    .review-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .review-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .confidence-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .confidence-high {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .confidence-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .confidence-low {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .status-present {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-late {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .status-excused {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .status-absent {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="text-muted mb-0">
+                        <i class="fas fa-flag me-2"></i>
+                        Entries flagged for manual verification due to low face recognition confidence
+                    </h5>
+                </div>
+                <a href="{{ url_for('teacher_daily_summary') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Summary
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if flagged_entries %}
+    <div class="row">
+        {% for entry in flagged_entries %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card review-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">{{ entry.student_name }}</h5>
+                            <small class="text-muted">{{ entry.department }} - {{ entry.batch }}</small>
+                        </div>
+                        {% if entry.confidence_score %}
+                        <span class="confidence-badge 
+                            {% if entry.confidence_score >= 75 %}confidence-high
+                            {% elif entry.confidence_score >= 50 %}confidence-medium
+                            {% else %}confidence-low{% endif %}">
+                            {{ entry.confidence_score|round(1) }}%
+                        </span>
+                        {% else %}
+                        <span class="confidence-badge confidence-low">N/A</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Date</small>
+                                <strong>{{ entry.date }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Period</small>
+                                <strong>{{ entry.period }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Current Status</small>
+                        <span class="status-badge status-{{ entry.status }}">
+                            {{ entry.status|capitalize }}
+                        </span>
+                    </div>
+
+                    <form action="{{ url_for('teacher_confirm_attendance', attendance_id=entry.id) }}" method="POST">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="submit" name="action" value="confirm" class="btn btn-success w-100">
+                                    <i class="fas fa-check me-1"></i>Confirm
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-danger w-100 dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown">
+                                        <i class="fas fa-times me-1"></i>Change Status
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><button type="submit" name="action" value="reject" class="dropdown-item">
+                                                <input type="hidden" name="status" value="present">Mark Present</button>
+                                        </li>
+                                        <li><button type="submit" name="action" value="reject" class="dropdown-item"
+                                                onclick="this.previousElementSibling.querySelector('input').value='late'">Mark
+                                                Late</button></li>
+                                        <li><button type="submit" name="action" value="reject" class="dropdown-item"
+                                                onclick="this.previousElementSibling.querySelector('input').value='excused'">Mark
+                                                Excused</button></li>
+                                        <li><button type="submit" name="action" value="reject" class="dropdown-item"
+                                                onclick="this.previousElementSibling.querySelector('input').value='absent'">Mark
+                                                Absent</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card review-card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">All Clear!</h4>
+                    <p class="text-muted">No attendance entries require manual verification.</p>
+                    <a href="{{ url_for('teacher_daily_summary') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i>View Daily Summary
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

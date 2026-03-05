@@ -1,0 +1,311 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Leave Requests - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --success-color: #2ecc71;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+    }
+
+    .leave-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .leave-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .leave-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.2);
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: var(--primary-color);
+    }
+
+    .section-title {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2em;
+    }
+
+    .request-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .request-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .request-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .status-pending {
+        background: linear-gradient(135deg, #f39c12, #e74c3c);
+        color: white;
+    }
+
+    .status-approved {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+    }
+
+    .status-rejected {
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+        color: white;
+    }
+
+    .leave-type-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .info-box {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .info-box i {
+        font-size: 1.5em;
+        margin-right: 10px;
+    }
+</style>
+
+<div class="leave-container">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="leave-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1 text-dark"><i class="fas fa-calendar-minus me-3"></i>Leave Requests</h2>
+                            <p class="text-muted mb-0">Request leave and view your leave history</p>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ session.name }}</h4>
+                            <small class="text-muted">Student</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="info-box d-flex align-items-center">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Leave Attendance Policy:</strong> Approved leaves count as <strong>0.5 attendance
+                            credit</strong> (50%) instead of being marked absent. Submit your leave requests in advance
+                        for teacher approval.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Leave Request Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="leave-card">
+                    <div class="section-header">
+                        <i class="fas fa-plus-circle section-icon"></i>
+                        <h5 class="section-title">Submit New Leave Request</h5>
+                    </div>
+                    <form method="POST" action="{{ url_for('student_leave_requests') }}">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="leave_type" class="form-label">Leave Type</label>
+                                <select class="form-select" id="leave_type" name="leave_type" required>
+                                    <option value="personal">Personal</option>
+                                    <option value="medical">Medical</option>
+                                    <option value="family">Family Emergency</option>
+                                    <option value="academic">Academic Event</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="teacher_id" class="form-label">Class Teacher</label>
+                                <select class="form-select" id="teacher_id" name="teacher_id" required>
+                                    <option value="" selected disabled>Select your Class Teacher</option>
+                                    {% for teacher in teachers %}
+                                    <option value="{{ teacher.user_id }}">{{ teacher.name }} ({{ teacher.department or
+                                        'General' }})</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Your request will be sent to this teacher for approval.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="reason" class="form-label">Reason</label>
+                                <input type="text" class="form-control" id="reason" name="reason"
+                                    placeholder="Brief reason for your leave..." required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Leave Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Requests List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="leave-card">
+                    <div class="section-header">
+                        <i class="fas fa-history section-icon"></i>
+                        <h5 class="section-title">Your Leave Requests</h5>
+                    </div>
+
+                    {% if leave_requests %}
+                    {% for leave in leave_requests %}
+                    <div class="request-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    {{ leave.start_date }} → {{ leave.end_date }}
+                                </h5>
+                                <span class="leave-type-badge">
+                                    <i class="fas fa-tag me-1"></i>{{ leave.leave_type|title }}
+                                </span>
+                            </div>
+                            <span class="request-status status-{{ leave.status }}">{{ leave.status|title }}</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <label class="form-label"><i class="fas fa-comment me-2"></i>Reason:</label>
+                                    <strong>{{ leave.reason }}</strong>
+                                </div>
+                                {% if leave.teacher_name %}
+                                <div class="text-end">
+                                    <small class="text-muted"><i class="fas fa-chalkboard-teacher me-1"></i>Assigned
+                                        to:</small><br>
+                                    <span>{{ leave.teacher_name }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if leave.status == 'approved' %}
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Approved</strong> - Your attendance for these dates will count as 0.5 credit.
+                            {% if leave.reviewed_by %}
+                            <br><small>Reviewed by: {{ leave.reviewed_by }}</small>
+                            {% endif %}
+                        </div>
+                        {% elif leave.status == 'rejected' %}
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>Rejected</strong>
+                            {% if leave.teacher_remarks %}
+                            <br><small>Remarks: {{ leave.teacher_remarks }}</small>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Pending Review</strong> - Waiting for teacher approval.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="request-card text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Leave Requests</h5>
+                        <p class="text-muted">You haven't submitted any leave requests yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set today's date as default for start date
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').value = today;
+        document.getElementById('end_date').value = today;
+
+        // Ensure end date is not before start date
+        document.getElementById('start_date').addEventListener('change', function () {
+            document.getElementById('end_date').min = this.value;
+            if (document.getElementById('end_date').value < this.value) {
+                document.getElementById('end_date').value = this.value;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Admin Approvals - SmartCampus AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-user-check text-primary me-2"></i>Pending Registrations</h2>
+        <span class="badge bg-primary rounded-pill">{{ approvals|length }} Pending</span>
+    </div>
+</div>
+
+{% if approvals %}
+<div class="row">
+    {% for reg in approvals %}
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-0">{{ reg.name }}</h5>
+                        <small class="text-muted"><i class="fas fa-envelope me-1"></i>{{ reg.email }}</small>
+                    </div>
+                    <span class="badge {% if reg.role == 'student' %}bg-info{% else %}bg-warning{% endif %} text-dark">
+                        {{ reg.role|upper }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <img src="{{ url_for('static', filename=reg.face_image_path.replace('backend/static/', '').replace('static/', '')) if 'static' in reg.face_image_path else '/' + reg.face_image_path.replace('\\', '/') }}"
+                            class="img-fluid rounded shadow-sm" alt="Face"
+                            onerror="this.src='/static/avatars/default.png'">
+                        <!-- Note: The path handling above is a bit tricky depending on how dataset is served. 
+                                 Usually dataset folder needs to be served as static -->
+                    </div>
+                    <div class="col-6">
+                        <p class="mb-1"><strong>Phone:</strong><br>{{ reg.phone or 'N/A' }}</p>
+                        <p class="mb-1"><strong>Dept:</strong><br>{{ reg.department or 'N/A' }}</p>
+                        {% if reg.role == 'student' %}
+                        <p class="mb-0"><strong>Batch:</strong><br>{{ reg.batch or 'N/A' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if reg.role == 'student' %}
+                <div class="bg-light p-2 rounded mb-3 small">
+                    <p class="mb-1"><strong>Parent:</strong> {{ reg.parent_name }}</p>
+                    <p class="mb-0"><strong>Parent Phone:</strong> {{ reg.parent_phone }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-0 py-3">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <form action="{{ url_for('admin_reject_registration', reg_id=reg.id) }}" method="POST"
+                        onsubmit="return confirm('Are you sure you want to REJECT this registration?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm px-3">Reject</button>
+                    </form>
+                    <form action="{{ url_for('admin_approve_registration', reg_id=reg.id) }}" method="POST">
+                        <button type="submit" class="btn btn-success btn-sm px-3">Approve & Issue ID</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-check-circle fa-4x text-light mb-3"></i>
+    <h4 class="text-muted">No pending registrations!</h4>
+</div>
+{% endif %}
+</div>
+{% endblock %}

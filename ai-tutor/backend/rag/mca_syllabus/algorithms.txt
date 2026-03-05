@@ -1,0 +1,108 @@
+# Algorithms in Computer Science
+
+## Sorting Algorithms
+### Bubble Sort
+- Time Complexity: O(n²) average/worst case, O(n) best case
+- Space Complexity: O(1)
+- Stable sorting algorithm
+- Repeatedly steps through list, compares adjacent elements, swaps if wrong order
+
+### Selection Sort
+- Time Complexity: O(n²) for all cases
+- Space Complexity: O(1)
+- Divides array into sorted and unsorted parts
+- Selects smallest element from unsorted part and moves to sorted part
+
+### Insertion Sort
+- Time Complexity: O(n²) worst/average, O(n) best case
+- Space Complexity: O(1)
+- Builds final sorted array one item at a time
+- Efficient for small datasets and nearly sorted arrays
+
+### Merge Sort
+- Time Complexity: O(n log n) for all cases
+- Space Complexity: O(n)
+- Divide and conquer algorithm
+- Stable sort, predictable performance
+
+### Quick Sort
+- Time Complexity: O(n log n) average, O(n²) worst case
+- Space Complexity: O(log n)
+- Divide and conquer algorithm
+- In-place sorting, generally faster in practice than merge sort
+
+### Heap Sort
+- Time Complexity: O(n log n) for all cases
+- Space Complexity: O(1)
+- Based on binary heap data structure
+- In-place sorting algorithm
+
+## Searching Algorithms
+### Linear Search
+- Time Complexity: O(n)
+- Sequential search through all elements
+- Works on unsorted arrays
+
+### Binary Search
+- Time Complexity: O(log n)
+- Requires sorted array
+- Divide and conquer approach
+
+### Jump Search
+- Time Complexity: O(√n)
+- Works on sorted arrays
+- Jump ahead by fixed steps, then perform linear search
+
+## Graph Algorithms
+### Depth-First Search (DFS)
+- Time Complexity: O(V + E) for adjacency list, O(V²) for matrix
+- Uses stack or recursion
+- Applications: Topological sorting, detecting cycles, path finding
+
+### Breadth-First Search (BFS)
+- Time Complexity: O(V + E) for adjacency list, O(V²) for matrix
+- Uses queue
+- Applications: Shortest path in unweighted graphs, level-order traversal
+
+### Dijkstra's Algorithm
+- Time Complexity: O((V + E) log V) with binary heap
+- Finds shortest paths from source vertex to all other vertices
+- Works with weighted graphs (non-negative weights)
+
+### Bellman-Ford Algorithm
+- Time Complexity: O(VE)
+- Handles negative edge weights
+- Can detect negative weight cycles
+
+## Dynamic Programming
+- Optimization technique for overlapping subproblems
+- Memoization (top-down) vs Tabulation (bottom-up)
+- Examples: Fibonacci sequence, Longest Common Subsequence, Knapsack problem, Matrix chain multiplication
+
+## Greedy Algorithms
+- Makes locally optimal choice at each stage
+- Examples: Activity selection, Fractional knapsack, Huffman coding, Minimum spanning tree (Kruskal's, Prim's)
+
+## String Algorithms
+### KMP (Knuth-Morris-Pratt)
+- Time Complexity: O(n + m)
+- Pattern matching algorithm
+- Avoids unnecessary character comparisons
+
+### Rabin-Karp
+- Time Complexity: O(nm) worst case, O(n+m) average
+- Rolling hash technique
+- Good for multiple pattern matching
+
+## Computational Complexity
+- Big O notation: Upper bound
+- Omega notation: Lower bound
+- Theta notation: Tight bound
+- P vs NP: Polynomial vs Non-deterministic polynomial problems
+
+## Exam Preparation Tips:
+- Know the time and space complexity of each algorithm
+- Understand when to use each algorithm
+- Practice implementation of basic algorithms
+- Be familiar with algorithmic paradigms (divide and conquer, greedy, DP)
+- Understand the trade-offs between different approaches

@@ -1,0 +1,16 @@
+
+--- SMS SIMULATION [2026-02-27 23:46:52] ---
+TO: +919000000000
+MESSAGE:
+AI Tutor: User approved.
+ID: student005
+Pass: testpass
+----------------------------------------
+
+--- SMS SIMULATION [2026-03-03 11:07:15] ---
+TO: +918921407344
+MESSAGE:
+AI Tutor: Student approved.
+ID: student006
+Pass: TEs3umrG
+----------------------------------------

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 18pt;
+        }
+
+        .header p {
+            margin: 5px 0 10px;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .app-title {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border: 0.5pt solid #ccc;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 0.5pt solid #eee;
+            padding: 6px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            padding-top: 10px;
+        }
+
+        .status-present {
+            color: #27ae60;
+        }
+
+        .status-absent {
+            color: #c0392b;
+        }
+
+        .status-late {
+            color: #f39c12;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <p>Generated on: {{ generated_at }}</p>
+        <p class="app-title">SmartCampus AI</p>
+    </div>
+
+    {% if date_range %}
+    <p><strong>Date Range:</strong> {{ date_range }}</p>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                {% for col in columns %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                <td>
+                    {% if cell == 'present' %}
+                    <span class="status-present">Present</span>
+                    {% elif cell == 'absent' %}
+                    <span class="status-absent">Absent</span>
+                    {% elif cell == 'late' %}
+                    <span class="status-late">Late</span>
+                    {% else %}
+                    {{ cell }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Page <pdf:pagenumber> of <pdf:pagecount>
+    </div>
+</body>
+
+</html>

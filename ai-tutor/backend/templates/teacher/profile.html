@@ -1,0 +1,296 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Teacher Profile - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+    }
+
+    .profile-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .profile-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .profile-header:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .profile-card {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fbfd);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .info-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .info-value {
+        color: #666;
+    }
+
+    .edit-form {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.2);
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: var(--primary-color);
+    }
+
+    .section-title {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2em;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="profile-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1 text-dark"><i class="fas fa-user-circle me-3"></i>Teacher Profile</h2>
+                            <p class="text-muted mb-0">Manage your personal information and preferences</p>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ teacher.name }}</h4>
+                            <small class="text-muted">{{ teacher.user_id }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="profile-card">
+                    <div class="section-header">
+                        <i class="fas fa-info-circle section-icon"></i>
+                        <h5 class="section-title">Personal Information</h5>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value">{{ teacher.name }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ teacher.email or 'Not provided' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">User ID:</span>
+                        <span class="info-value">{{ teacher.user_id }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Department:</span>
+                        <span class="info-value">{{ teacher.department or 'Not specified' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value">{{ teacher.phone or 'Not provided' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Address:</span>
+                        <span class="info-value">{{ teacher.address or 'Not provided' }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Join Date:</span>
+                        <span class="info-value">{{ teacher.created_at or 'Unknown' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Profile Form -->
+            <div class="col-lg-4 mb-4">
+                <div class="profile-card">
+                    <div class="section-header">
+                        <i class="fas fa-edit section-icon"></i>
+                        <h5 class="section-title">Update Information</h5>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('teacher_update_profile') }}">
+                        <div class="mb-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="" {% if not teacher.department %}selected{% endif %}>Select Department
+                                </option>
+                                <option value="Computer Science" {% if teacher.department=='Computer Science'
+                                    %}selected{% endif %}>Computer Science</option>
+                                <option value="Mathematics" {% if teacher.department=='Mathematics' %}selected{% endif
+                                    %}>Mathematics</option>
+                                <option value="Physics" {% if teacher.department=='Physics' %}selected{% endif %}>
+                                    Physics</option>
+                                <option value="Chemistry" {% if teacher.department=='Chemistry' %}selected{% endif %}>
+                                    Chemistry</option>
+                                <option value="Biology" {% if teacher.department=='Biology' %}selected{% endif %}>
+                                    Biology</option>
+                                <option value="English" {% if teacher.department=='English' %}selected{% endif %}>
+                                    English</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                value="{{ teacher.phone or '' }}" placeholder="Enter phone number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3"
+                                placeholder="Enter your address">{{ teacher.address or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="designation" class="form-label">Designation</label>
+                            <select class="form-select" id="designation" name="designation">
+                                <option value="" {% if not teacher.designation %}selected{% endif %}>Select Designation
+                                </option>
+                                <option value="Professor" {% if teacher.designation=='Professor' %}selected{% endif %}>
+                                    Professor</option>
+                                <option value="Associate Professor" {% if teacher.designation=='Associate Professor'
+                                    %}selected{% endif %}>Associate Professor</option>
+                                <option value="Assistant Professor" {% if teacher.designation=='Assistant Professor'
+                                    %}selected{% endif %}>Assistant Professor</option>
+                                <option value="Lecturer" {% if teacher.designation=='Lecturer' %}selected{% endif %}>
+                                    Lecturer</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-2"></i>Save
+                            Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teaching Statistics -->
+        <div class="row">
+            <div class="col-12">
+                <div class="profile-card">
+                    <div class="section-header">
+                        <i class="fas fa-chart-bar section-icon"></i>
+                        <h5 class="section-title">Teaching Statistics</h5>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <div class="fs-2 text-primary mb-2"><i class="fas fa-users"></i></div>
+                                <h4 class="mb-1">{{ total_students or 0 }}</h4>
+                                <small class="text-muted">Students Taught</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <div class="fs-2 text-success mb-2"><i class="fas fa-calendar-check"></i></div>
+                                <h4 class="mb-1">{{ total_classes_taught or 0 }}</h4>
+                                <small class="text-muted">Classes Conducted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <div class="fs-2 text-info mb-2"><i class="fas fa-percentage"></i></div>
+                                <h4 class="mb-1">{{ avg_attendance_rate or 0 }}%</h4>
+                                <small class="text-muted">Avg Attendance</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <div class="fs-2 text-warning mb-2"><i class="fas fa-comments"></i></div>
+                                <h4 class="mb-1">{{ feedback_score or 0 }}/5</h4>
+                                <small class="text-muted">Feedback Score</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Section -->
+                    <div class="mt-4">
+                        <h6>Contact Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Phone:</strong> {{ teacher.phone or 'Not provided' }}</p>
+                                <p><strong>Address:</strong> {{ teacher.address or 'Not provided' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Department:</strong> {{ teacher.department or 'Not specified' }}</p>
+                                <p><strong>Designation:</strong> {{ teacher.designation or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+/* Logout Link Styling */
+.logout-link {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 15px;
+    color: #ff6b6b !important;
+    transition: all 0.3s ease;
+}
+
+.logout-link:hover {
+    color: #ff5252 !important;
+    background-color: rgba(255, 107, 107, 0.1);
+    transform: translateX(5px);
+}
+
+.logout-link i {
+    margin-right: 12px;
+}

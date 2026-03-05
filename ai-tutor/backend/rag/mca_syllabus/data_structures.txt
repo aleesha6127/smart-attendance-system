@@ -1,0 +1,58 @@
+# Data Structures in Computer Science
+
+## Arrays
+- Collection of elements of the same type stored in contiguous memory locations
+- Access time: O(1) for direct access
+- Types: Static arrays, Dynamic arrays
+
+## Linked Lists
+- Linear collection of elements called nodes
+- Each node contains data and pointer to next node
+- Types: Singly linked list, Doubly linked list, Circular linked list
+- Time complexity: Insertion/deletion O(1), Search O(n)
+
+## Stacks
+- LIFO (Last In First Out) data structure
+- Operations: Push, Pop, Peek
+- Applications: Function calls, Expression evaluation, Undo mechanisms
+
+## Queues
+- FIFO (First In First Out) data structure
+- Operations: Enqueue, Dequeue, Front, Rear
+- Types: Simple Queue, Circular Queue, Priority Queue, Double-ended Queue (Deque)
+
+## Trees
+- Hierarchical data structure with nodes
+- Root node: Topmost node with no parent
+- Binary Tree: Each node has at most 2 children
+- Binary Search Tree: Left child < Parent < Right child
+- AVL Tree: Self-balancing binary search tree
+
+## Graphs
+- Collection of vertices (nodes) and edges
+- Types: Directed, Undirected, Weighted, Unweighted
+- Representations: Adjacency Matrix, Adjacency List
+- Algorithms: DFS, BFS, Dijkstra's, Floyd Warshall
+
+## Hash Tables
+- Key-value pairs stored using hash function
+- Average time complexity: O(1) for search, insert, delete
+- Collision resolution: Chaining, Open Addressing
+
+## Heaps
+- Complete binary tree satisfying heap property
+- Max Heap: Parent > Children
+- Min Heap: Parent < Children
+- Applications: Priority queues, Heap sort
+
+## Algorithms for Data Structures
+- Searching: Linear Search O(n), Binary Search O(log n)
+- Sorting: Bubble Sort O(n²), Quick Sort O(n log n), Merge Sort O(n log n)
+- Tree Traversals: Inorder, Preorder, Postorder
+- Graph Traversals: Depth First Search (DFS), Breadth First Search (BFS)
+
+## Exam Preparation Tips:
+- Understand time and space complexity of each operation
+- Know when to use each data structure
+- Practice implementation of basic operations
+- Be familiar with common algorithms and their applications

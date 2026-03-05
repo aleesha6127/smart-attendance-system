@@ -1,0 +1,291 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Edit User - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border-bottom: none;
+    }
+
+    .custom-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+</style>
+
+<div class="page-header">
+    <h2><i class="fas fa-user-edit me-2"></i>Edit User</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>User Information</h5>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                    role="alert">
+                    <i
+                        class="fas fa-{% if category == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="user_id" class="form-label">User ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                    <input type="text" class="form-control" id="user_id" name="user_id"
+                                        value="{{ user.user_id }}" readonly>
+                                </div>
+                                <div class="form-text">User ID cannot be changed after creation</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        value="{{ user.name }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        value="{{ user.email or '' }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Role *</label>
+                                <select class="form-select custom-select" id="role" name="role" required
+                                    onchange="toggleFields()">
+                                    <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+                                    <option value="teacher" {% if user.role=='teacher' %}selected{% endif %}>Teacher
+                                    </option>
+                                    <option value="student" {% if user.role=='student' %}selected{% endif %}>Student
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="department" class="form-label">Department *</label>
+                                <select class="form-select custom-select" id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Information Technology" {% if
+                                        user.department=='Information Technology' %}selected{% endif %}>Information
+                                        Technology</option>
+                                    <option value="Civil Engineering" {% if user.department=='Civil Engineering'
+                                        %}selected{% endif %}>Civil Engineering</option>
+                                    <option value="Mathematics Engineering" {% if
+                                        user.department=='Mathematics Engineering' %}selected{% endif %}>Mathematics
+                                        Engineering</option>
+                                    <option value="Computer Science" {% if user.department=='Computer Science'
+                                        %}selected{% endif %}>Computer Science</option>
+                                    <option value="Science" {% if user.department=='Science' %}selected{% endif %}>
+                                        Science</option>
+                                    <option value="Arts" {% if user.department=='Arts' %}selected{% endif %}>Arts
+                                    </option>
+                                    <option value="Commerce" {% if user.department=='Commerce' %}selected{% endif %}>
+                                        Commerce</option>
+                                    <option value="Management" {% if user.department=='Management' %}selected{% endif
+                                        %}>Management</option>
+                                    <option value="Other" {% if user.department=='Other' %}selected{% endif %}>Other
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="batch" class="form-label">Batch *</label>
+                                <select class="form-select custom-select" id="batch" name="batch" required>
+                                    <option value="">Select Batch</option>
+                                    <option value="2024-2028" {% if user.batch=='2024-2028' %}selected{% endif %}>
+                                        2024-2028 (4 Year)</option>
+                                    <option value="2025-2029" {% if user.batch=='2025-2029' %}selected{% endif %}>
+                                        2025-2029 (4 Year)</option>
+                                    <option value="2023-2027" {% if user.batch=='2023-2027' %}selected{% endif %}>
+                                        2023-2027 (4 Year)</option>
+                                    <option value="2022-2026" {% if user.batch=='2022-2026' %}selected{% endif %}>
+                                        2022-2026 (4 Year)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4" id="batchFieldContainer">
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">Semester *</label>
+                                <select class="form-select custom-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester/Year</option>
+                                    <option value="Semester 1" {% if user.semester=='Semester 1' %}selected{% endif %}>
+                                        Semester 1</option>
+                                    <option value="Semester 2" {% if user.semester=='Semester 2' %}selected{% endif %}>
+                                        Semester 2</option>
+                                    <option value="Semester 3" {% if user.semester=='Semester 3' %}selected{% endif %}>
+                                        Semester 3</option>
+                                    <option value="Semester 4" {% if user.semester=='Semester 4' %}selected{% endif %}>
+                                        Semester 4</option>
+                                    <option value="Semester 5" {% if user.semester=='Semester 5' %}selected{% endif %}>
+                                        Semester 5</option>
+                                    <option value="Semester 6" {% if user.semester=='Semester 6' %}selected{% endif %}>
+                                        Semester 6</option>
+                                    <option value="Semester 7" {% if user.semester=='Semester 7' %}selected{% endif %}>
+                                        Semester 7</option>
+                                    <option value="Semester 8" {% if user.semester=='Semester 8' %}selected{% endif %}>
+                                        Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 student-only">
+                            <div class="mb-3">
+                                <label for="parent_name" class="form-label">Parent's Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
+                                    <input type="text" class="form-control" id="parent_name" name="parent_name"
+                                        value="{{ user.parent_name or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 student-only">
+                            <div class="mb-3">
+                                <label for="parent_phone" class="form-label">Parent's Phone *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
+                                    <input type="tel" class="form-control" id="parent_phone" name="parent_phone"
+                                        value="{{ user.parent_phone or '' }}" pattern="[0-9]{10}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                        value="{{ user.phone or '' }}" placeholder="Enter 10-digit phone number"
+                                        pattern="[0-9]{10}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="designation" class="form-label">Designation</label>
+                                <select class="form-select custom-select" id="designation" name="designation">
+                                    <option value="" {% if not user.designation %}selected{% endif %}>Select Designation
+                                    </option>
+                                    <option value="Professor" {% if user.designation=='Professor' %}selected{% endif %}>
+                                        Professor</option>
+                                    <option value="Associate Professor" {% if user.designation=='Associate Professor'
+                                        %}selected{% endif %}>Associate Professor</option>
+                                    <option value="Assistant Professor" {% if user.designation=='Assistant Professor'
+                                        %}selected{% endif %}>Assistant Professor</option>
+                                    <option value="Lecturer" {% if user.designation=='Lecturer' %}selected{% endif %}>
+                                        Lecturer</option>
+                                    <option value="Instructor" {% if user.designation=='Instructor' %}selected{% endif
+                                        %}>Instructor</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {%
+                                        if user.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">User Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update User
+                        </button>
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFields() {
+        const role = document.getElementById('role').value;
+        const studentOnlyFields = document.querySelectorAll('.student-only');
+        const batchFieldContainer = document.getElementById('batchFieldContainer');
+        const departmentSelect = document.getElementById('department');
+        const batchSelect = document.getElementById('batch');
+        const semesterSelect = document.getElementById('semester');
+        const parentNameInput = document.getElementById('parent_name');
+        const parentPhoneInput = document.getElementById('parent_phone');
+
+        if (role === 'student') {
+            studentOnlyFields.forEach(f => f.style.display = 'block');
+            if (batchFieldContainer) batchFieldContainer.style.display = 'block';
+
+            departmentSelect.required = true;
+            batchSelect.required = true;
+            semesterSelect.required = true;
+            parentNameInput.required = true;
+            parentPhoneInput.required = true;
+        } else {
+            studentOnlyFields.forEach(f => f.style.display = 'none');
+            if (batchFieldContainer) batchFieldContainer.style.display = 'none';
+
+            departmentSelect.required = false;
+            batchSelect.required = false;
+            semesterSelect.required = false;
+            parentNameInput.required = false;
+            parentPhoneInput.required = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleFields();
+    });
+</script>
+{% endblock %}

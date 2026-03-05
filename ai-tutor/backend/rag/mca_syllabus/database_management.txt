@@ -1,0 +1,157 @@
+# Database Management Systems
+
+## Database Fundamentals
+### Definition
+- Organized collection of structured information
+- DBMS: Software to manage databases
+- Advantages: Data independence, Reduced redundancy, Data sharing
+
+### Database Models
+- Relational Model: Tables with rows and columns
+- Hierarchical Model: Tree-like structure
+- Network Model: Graph structure
+- Object-Oriented Model: Objects and classes
+- NoSQL: Document, Key-value, Column-family, Graph databases
+
+## Relational Database Concepts
+### Schema
+- Logical structure of database
+- Tables, Relationships, Constraints
+
+### Keys
+- Primary Key: Unique identifier for records
+- Foreign Key: Reference to primary key in another table
+- Candidate Key: Potential primary keys
+- Super Key: Set of attributes that uniquely identifies tuples
+- Composite Key: Combination of multiple attributes
+
+### Normalization
+- Process to reduce redundancy
+- 1NF: Atomic values only
+- 2NF: 1NF + no partial dependencies
+- 3NF: 2NF + no transitive dependencies
+- BCNF: Every determinant is a candidate key
+- 4NF: No multivalued dependencies
+- 5NF: No join dependencies
+
+## SQL Commands
+### DDL (Data Definition Language)
+- CREATE: Create database objects
+- ALTER: Modify database objects
+- DROP: Delete database objects
+- TRUNCATE: Remove all records from table
+
+### DML (Data Manipulation Language)
+- SELECT: Retrieve data
+- INSERT: Add new records
+- UPDATE: Modify existing records
+- DELETE: Remove records
+
+### DCL (Data Control Language)
+- GRANT: Give permissions
+- REVOKE: Remove permissions
+
+### TCL (Transaction Control Language)
+- COMMIT: Save changes
+- ROLLBACK: Undo changes
+- SAVEPOINT: Create checkpoints
+
+## Advanced SQL Concepts
+### Joins
+- INNER JOIN: Matching records in both tables
+- LEFT JOIN: All records from left table
+- RIGHT JOIN: All records from right table
+- FULL OUTER JOIN: All records from both tables
+- CROSS JOIN: Cartesian product
+
+### Subqueries
+- Nested queries within another query
+- Single-row: Returns one row
+- Multiple-row: Returns multiple rows
+- Correlated: References outer query
+
+### Views
+- Virtual tables based on query results
+- Simplify complex queries
+- Provide security layer
+- Types: Simple, Complex, Materialized
+
+### Indexes
+- Improve query performance
+- Clustered: Physical ordering of data
+- Non-clustered: Logical ordering separate from data
+- Types: Unique, Composite, Partial
+
+## Transaction Management
+### ACID Properties
+- Atomicity: All or nothing
+- Consistency: Valid state preservation
+- Isolation: Concurrent execution
+- Durability: Permanent changes
+
+### Isolation Levels
+- Read Uncommitted: Lowest isolation
+- Read Committed: Avoid dirty reads
+- Repeatable Read: Avoid non-repeatable reads
+- Serializable: Highest isolation
+
+### Concurrency Control
+- Locking: Pessimistic approach
+- Timestamp Ordering: Optimistic approach
+- Multiversion Concurrency Control (MVCC)
+
+## Database Design
+### ER Diagrams
+- Entities: Real-world objects
+- Attributes: Properties of entities
+- Relationships: Associations between entities
+- Cardinality: One-to-one, One-to-many, Many-to-many
+
+### Design Phases
+- Requirements Analysis
+- Conceptual Design
+- Logical Design
+- Physical Design
+
+## Object-Oriented Databases
+- Combine OOP with database technologies
+- Encapsulation, Inheritance, Polymorphism
+- Persistent objects
+
+## Distributed Databases
+- Data stored across multiple locations
+- Transparency: Location, Replication, Failure
+- Fragmentation: Horizontal, Vertical, Mixed
+- Replication: Full, Partial
+
+## Data Warehousing
+- Subject-oriented, Integrated, Time-variant, Non-volatile
+- ETL: Extract, Transform, Load
+- OLAP vs OLTP
+- Star Schema, Snowflake Schema
+
+## Big Data Concepts
+- Volume, Velocity, Variety, Veracity, Value
+- Hadoop, Spark, Hive, Pig
+- MapReduce paradigm
+
+## Security
+- Authentication: Identity verification
+- Authorization: Access control
+- Encryption: Data protection
+- Auditing: Activity monitoring
+
+## Performance Tuning
+- Query optimization
+- Index tuning
+- Partitioning
+- Caching strategies
+- Monitoring and profiling
+
+## Exam Preparation Tips:
+- Master SQL syntax and commands
+- Understand normalization and database design
+- Know transaction properties and isolation levels
+- Practice ER diagram creation
+- Understand the difference between various database models
+- Learn about concurrency control mechanisms

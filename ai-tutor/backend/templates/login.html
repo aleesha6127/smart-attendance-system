@@ -1,0 +1,62 @@
+{% extends "base_public.html" %}
+
+{% block title %}Login - SmartCampus AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-header gradient-bg text-white text-center py-4">
+                <h3 class="mb-0"><i class="fas fa-lock me-2"></i>Login</h3>
+            </div>
+            <div class="card-body p-4">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+
+                <!-- Login Form with Role Selection -->
+                <form method="POST" id="loginForm">
+                    <!-- User ID Input -->
+
+                    <div class="mb-4">
+                        <label for="user_id" class="form-label fw-bold">User ID</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control form-control-lg" id="user_id" name="user_id"
+                                placeholder="Enter your user ID" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-bold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control form-control-lg" id="password" name="password"
+                                placeholder="Enter your password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 fs-5 fw-bold" id="loginBtn">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </button>
+                </form>
+
+                <!-- Instructions for users -->
+                <div class="mt-4 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Enter your credentials to log in.
+                        <br>
+                        Don't have an account? <a href="{{ url_for('register') }}" class="fw-bold">Register Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Login form validation script can be added here if needed
+</script>
+{% endblock %}

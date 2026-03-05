@@ -1,0 +1,350 @@
+{% extends "base_public.html" %}
+
+{% block title %}SmartCampus AI - Future of Education{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+
+{% block navbar_class %}navbar-transparent{% endblock %}
+
+{% block content %}
+<!-- Colors Blobs background -->
+<div class="hero-blob blob-1"></div>
+<div class="hero-blob blob-2"></div>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <span
+                class="badge bg-white text-primary shadow-sm border rounded-pill px-3 py-2 mb-4 animate-up fw-semibold">
+                <i class="fas fa-sparkles me-2"></i>Experience the Future
+            </span>
+            <h1 class="display-1 mb-4 animate-up delay-1">
+                Smart Campus <br>
+                <span class="text-gradient">Redefined.</span>
+            </h1>
+            <p class="lead mb-5 animate-up delay-2" style="max-width: 500px;">
+                Seamlessly managing your campus with AI-powered attendance,
+                personal tutoring, and intelligent analytics.
+            </p>
+            <div class="d-flex gap-3 animate-up delay-3">
+                <a href="{{ url_for('login') }}" class="btn btn-primary-custom">
+                    Get Started <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                <a href="#features" class="btn btn-outline-custom">
+                    <i class="fas fa-play me-2"></i>Watch Demo
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center animate-up delay-2">
+            <div class="position-relative p-4">
+                <img src="{{ url_for('static', filename='images/landing-hero.png') }}"
+                    onerror="this.src='https://source.unsplash.com/random/800x600/?technology,university'; this.onerror=null;"
+                    class="img-fluid rounded-5 shadow-lg position-relative z-index-1"
+                    style="transform: perspective(1000px) rotateY(-10deg) rotateX(5deg); transition: transform 0.5s;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator animate-up delay-3">
+        <div class="mouse">
+            <div class="wheel"></div>
+        </div>
+        <small class="mt-2 text-muted" style="font-size: 0.8rem;">Scroll</small>
+    </div>
+</section>
+
+<!-- Stats Box -->
+<section class="stats-section reveal">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <h3 class="display-4">98%</h3>
+                    <p class="mb-0 opacity-75">Attendance Accuracy</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <h3 class="display-4">24/7</h3>
+                    <p class="mb-0 opacity-75">AI Tutor Availability</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <h3 class="display-4">50+</h3>
+                    <p class="mb-0 opacity-75">Smart Features</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <h3 class="display-4">10k+</h3>
+                    <p class="mb-0 opacity-75">Active Students</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="text-center mb-5 reveal">
+        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3 fw-bold">WHY CHOOSE
+            US</span>
+        <h2 class="display-4 fw-bold mt-2">Intelligence in Every Step</h2>
+        <p class="lead mx-auto" style="max-width: 600px;">
+            We have reimagined the campus experience with cutting-edge AI technology designed to serve students and
+            faculty.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-4 reveal">
+            <div class="feature-card">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <h3>Face Recognition</h3>
+                <p class="text-muted mb-0">
+                    Automated attendance tracking using advanced computer vision.
+                    Eliminate manual roll calls and ensuring 100% authenticity.
+                </p>
+            </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="col-md-4 reveal">
+            <div class="feature-card" style="transition-delay: 0.1s;">
+                <div class="icon-box bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>AI Personal Tutor</h3>
+                <p class="text-muted mb-0">
+                    Personalized learning assistance available 24/7.
+                    Get instant doubts resolution, concept explanations, and study plans.
+                </p>
+            </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="col-md-4 reveal">
+            <div class="feature-card" style="transition-delay: 0.2s;">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Smart Analytics</h3>
+                <p class="text-muted mb-0">
+                    Deep insights into student performance and attendance trends.
+                    Predictive analysis to identify at-risk students early.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it Works Section -->
+<section class="py-5 bg-light rounded-5 my-5 reveal">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="display-4 fw-bold mb-3">How it Works</h2>
+            <p class="lead mx-auto" style="max-width: 600px;">Getting started with SmartCampus AI is simpler than you
+                think.</p>
+        </div>
+
+        <div class="row g-0">
+            <div class="col-lg-4">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <h4>Register</h4>
+                    <p class="text-muted">Create your profile and secure your student or faculty identity.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <h4>Capture Face</h4>
+                    <p class="text-muted">Enroll your biometric data for seamless, hands-free attendance.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="step-item last-step">
+                    <div class="step-number">3</div>
+                    <h4>Learn & Manage</h4>
+                    <p class="text-muted">Access your personalized AI tutor and track progress in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-5 reveal">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-4 fw-bold mb-3">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseOne">
+                                Is my face data secure?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes, we prioritize security. Your facial encodings are stored as mathematical
+                                representations and are encrypted, ensuring your privacy is always protected.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseTwo">
+                                How does the AI Tutor help me?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Our AI Tutor is available 24/7 to answer your doubts, explain complex concepts, and even
+                                help you create a personalized study roadmap based on your curriculum.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseThree">
+                                Can teachers monitor class performance?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Absolutely! Teachers have access to real-time analytics dashboards that visualize
+                                attendance trends and student engagement metrics for better classroom management.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Testimonial/CTA Section -->
+<section class="py-5 my-5 reveal">
+    <div
+        class="feature-card bg-gradient-primary text-white border-0 position-relative overflow-hidden p-5 text-center rounded-5">
+        <div class="position-relative z-index-1">
+            <h2 class="display-5 fw-bold mb-4">Ready to Transform Your Campus?</h2>
+            <p class="lead text-white opacity-90 mb-5 mx-auto" style="max-width: 600px;">
+                Join thousands of students and faculty members already experiencing
+                the next generation of education management.
+            </p>
+            <a href="{{ url_for('login') }}"
+                class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-primary shadow-lg hover-scale">
+                Access Portal Now
+            </a>
+        </div>
+        <!-- Decorative circles -->
+        <div
+            style="position: absolute; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; top: -100px; right: -100px; backdrop-filter: blur(5px);">
+        </div>
+        <div
+            style="position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%; bottom: -50px; left: -50px; backdrop-filter: blur(5px);">
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <a class="d-flex align-items-center text-dark text-decoration-none mb-3" href="#">
+                    <i class="fas fa-graduation-cap text-primary fa-2x me-2"></i>
+                    <span class="fs-4 fw-bold">SmartCampus AI</span>
+                </a>
+                <p class="text-muted">
+                    Empowering educational institutions with state-of-the-art AI technology
+                    for better management and learning outcomes.
+                </p>
+                <div class="mt-4">
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <h6 class="fw-bold mb-3">Product</h6>
+                <ul class="list-unstyled text-muted">
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">Features</a></li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">Pricing</a></li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">Roadmap</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-4">
+                <h6 class="fw-bold mb-3">Resources</h6>
+                <ul class="list-unstyled text-muted">
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">Documentation</a>
+                    </li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">API Status</a>
+                    </li>
+                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted hover-primary">Support</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-top pt-4 mt-4 text-center text-muted small">
+            <p>&copy; 2026 SmartCampus AI. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', function () {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('navbar-scrolled');
+            navbar.classList.remove('navbar-dark');
+            navbar.classList.add('navbar-light');
+        } else {
+            navbar.classList.remove('navbar-scrolled');
+            navbar.classList.remove('navbar-light');
+            navbar.classList.add('navbar-dark');
+        }
+    });
+
+    // Scroll reveal animation
+    window.addEventListener('scroll', reveal);
+
+    function reveal() {
+        var reveals = document.querySelectorAll('.reveal');
+
+        for (var i = 0; i < reveals.length; i++) {
+            var windowheight = window.innerHeight;
+            var revealtop = reveals[i].getBoundingClientRect().top;
+            var revealpoint = 150;
+
+            if (revealtop < windowheight - revealpoint) {
+                reveals[i].classList.add('active');
+            }
+        }
+    }
+
+    // Trigger once on load
+    reveal();
+</script>
+{% endblock %}

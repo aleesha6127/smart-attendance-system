@@ -1,0 +1,664 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Register Face - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    #video {
+        width: 100%;
+        border-radius: 12px;
+        transform: scaleX(-1);
+        /* Mirror the video for natural feel */
+    }
+
+    .face-guide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 260px;
+        border: 3px dashed #00ff88;
+        border-radius: 50%;
+        pointer-events: none;
+        box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.3);
+    }
+
+    .face-guide.warning {
+        border-color: #ffc107;
+        animation: pulse-warning 1s infinite;
+    }
+
+    .face-guide.error {
+        border-color: #dc3545;
+        animation: pulse-error 0.5s infinite;
+    }
+
+    .face-guide.success {
+        border-color: #28a745;
+        box-shadow: 0 0 20px rgba(40, 167, 69, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes pulse-warning {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes pulse-error {
+
+        0%,
+        100% {
+            border-color: #dc3545;
+        }
+
+        50% {
+            border-color: #ff6b6b;
+        }
+    }
+
+    .guide-text {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 500;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    .guide-text.success {
+        background: rgba(40, 167, 69, 0.9);
+    }
+
+    .guide-text.warning {
+        background: rgba(255, 193, 7, 0.9);
+        color: #000;
+    }
+
+    .guide-text.error {
+        background: rgba(220, 53, 69, 0.9);
+    }
+
+    .quality-indicators {
+        display: flex;
+        justify-content: space-around;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+
+    .quality-item {
+        text-align: center;
+        flex: 1;
+    }
+
+    .quality-item i {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+
+    .quality-item.good i {
+        color: #28a745;
+    }
+
+    .quality-item.bad i {
+        color: #dc3545;
+    }
+
+    .quality-item.warning i {
+        color: #ffc107;
+    }
+
+    .quality-label {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .tips-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .tips-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .tip-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tip-item:last-child {
+        border-bottom: none;
+    }
+
+    .tip-icon {
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .captured-preview {
+        border: 3px solid #28a745;
+        border-radius: 12px;
+        padding: 10px;
+        background: #f8fff8;
+    }
+
+    .retake-btn {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        border: none;
+        color: white;
+    }
+
+    .register-btn-success {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        font-size: 16px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-processing {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .status-success {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-error {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<h2 class="mb-4">
+    <i class="fas fa-user-check text-primary"></i>
+    Biometric Registration for {{ user.name }}
+</h2>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-camera"></i> Face Capture Station</h5>
+            </div>
+            <div class="card-body">
+                <!-- Video Container with Face Guide -->
+                <div class="video-wrapper mb-3">
+                    <video id="video" autoplay playsinline></video>
+                    <div id="face-guide" class="face-guide"></div>
+                    <div id="guide-text" class="guide-text">Position your face inside the oval</div>
+                </div>
+
+                <!-- Quality Indicators -->
+                <div id="quality-indicators" class="quality-indicators">
+                    <div id="quality-face" class="quality-item">
+                        <i class="fas fa-user-circle"></i>
+                        <div class="quality-label">Face Detected</div>
+                    </div>
+                    <div id="quality-lighting" class="quality-item">
+                        <i class="fas fa-sun"></i>
+                        <div class="quality-label">Lighting</div>
+                    </div>
+                    <div id="quality-position" class="quality-item">
+                        <i class="fas fa-crosshairs"></i>
+                        <div class="quality-label">Position</div>
+                    </div>
+                    <div id="quality-clarity" class="quality-item">
+                        <i class="fas fa-eye"></i>
+                        <div class="quality-label">Clarity</div>
+                    </div>
+                </div>
+
+                <!-- Captured Image Preview (hidden initially) -->
+                <div id="captured-section" class="mt-4" style="display: none;">
+                    <h6><i class="fas fa-check-circle text-success"></i> Captured Image Preview:</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="image-preview" class="captured-preview"></div>
+                        <div>
+                            <p class="mb-2 text-success"><strong>Image captured successfully!</strong></p>
+                            <p class="text-muted small mb-0">If the image looks good, click "Complete
+                                Registration".<br>Otherwise, click "Retake Photo".</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 mt-4">
+                    <button id="capture-btn" class="btn btn-primary btn-lg" type="button" disabled>
+                        <i class="fas fa-camera"></i> Capture Photo
+                    </button>
+                    <button id="retake-btn" class="btn retake-btn btn-lg" type="button" style="display: none;">
+                        <i class="fas fa-redo"></i> Retake Photo
+                    </button>
+                    <button id="register-btn" class="btn register-btn-success btn-lg" type="button"
+                        style="display: none;">
+                        <i class="fas fa-check"></i> Complete Registration
+                    </button>
+                </div>
+
+                <!-- Status Message Area -->
+                <div id="status-message" class="mt-3">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div
+                        class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    {% if matching_user %}
+                    <!-- Duplicate Face Found - Show Correct Face -->
+                    <div class="card border-danger mb-3">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0"><i class="fas fa-id-card"></i> Existing Registered Profile</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if matching_user.face_image_path %}
+                                <img src="{{ url_for('face_images', filename=matching_user.face_image_path) }}"
+                                    alt="Registered Face" class="rounded shadow-sm"
+                                    style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #dc3545;">
+                                {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                    style="width: 120px; height: 120px; border: 3px solid #dc3545;">
+                                    <i class="fas fa-user-slash fa-3x text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h5 class="mb-1">{{ matching_user.name }}</h5>
+                                    <p class="mb-1"><strong>Role:</strong> {{ matching_user.role|title }}</p>
+                                    <p class="mb-1"><strong>User ID:</strong> {{ matching_user.user_id }}</p>
+                                    <p class="mb-0 text-muted small">This person is already in the system. Profiles must
+                                        have unique biometric records.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Tips for Best Results -->
+        <div class="card tips-card shadow-sm mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tips for Best Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-sun"></i></div>
+                    <div>Face a window or light source for even lighting</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-user"></i></div>
+                    <div>Position face centered in the oval guide</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-eye"></i></div>
+                    <div>Look directly at the camera, eyes open</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-smile"></i></div>
+                    <div>Keep a neutral expression</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-ban"></i></div>
+                    <div>Remove sunglasses, hats, or masks</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon"><i class="fas fa-arrows-alt"></i></div>
+                    <div>Keep still while capturing</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-id-card"></i> User Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">User ID:</td>
+                        <td><strong>{{ user.user_id }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Name:</td>
+                        <td><strong>{{ user.name }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Role:</td>
+                        <td><strong>{{ user.role|title }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Status:</td>
+                        <td><span id="registration-status" class="status-badge status-pending">Pending
+                                Registration</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Class Monitor Info -->
+        <div class="card shadow-sm mt-3 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> For Class Monitor</h6>
+            </div>
+            <div class="card-body small">
+                <p class="mb-2">This face registration enables:</p>
+                <ul class="mb-0 ps-3">
+                    <li>Real-time face detection in class</li>
+                    <li>Automatic attendance marking</li>
+                    <li>Behavior analysis tracking</li>
+                </ul>
+                <p class="mt-2 mb-0 text-muted"><em>Ensure good quality capture for accurate recognition!</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="face-registration-form" method="post" style="display:none;">
+    <input type="hidden" id="image-data" name="image_data" value="">
+</form>
+
+<script>
+    let capturedImage = null;
+    let faceDetectionReady = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const retakeBtn = document.getElementById('retake-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const imagePreview = document.getElementById('image-preview');
+        const statusMessage = document.getElementById('status-message');
+        const registrationStatus = document.getElementById('registration-status');
+        const imageDataInput = document.getElementById('image-data');
+        const faceGuide = document.getElementById('face-guide');
+        const guideText = document.getElementById('guide-text');
+        const capturedSection = document.getElementById('captured-section');
+
+        // Quality indicators
+        const qualityFace = document.getElementById('quality-face');
+        const qualityLighting = document.getElementById('quality-lighting');
+        const qualityPosition = document.getElementById('quality-position');
+        const qualityClarity = document.getElementById('quality-clarity');
+
+        // Get access to the camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'user'
+                }
+            })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => {
+                        faceDetectionReady = true;
+                        startQualityCheck();
+                    };
+                })
+                .catch(function (err) {
+                    console.error("Error accessing camera: ", err);
+                    statusMessage.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Could not access camera. Please check permissions and try again.</div>';
+                });
+        }
+
+        captureBtn.addEventListener('click', captureImage);
+        retakeBtn.addEventListener('click', retakeImage);
+        registerBtn.addEventListener('click', registerFace);
+
+        function startQualityCheck() {
+            // Simulate quality checks (in real app, use face detection API)
+            setInterval(() => {
+                if (!capturedImage && faceDetectionReady) {
+                    checkQuality();
+                }
+            }, 500);
+        }
+
+        function checkQuality() {
+            // Create a temporary canvas to analyze the video frame
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = video.videoWidth;
+            tempCanvas.height = video.videoHeight;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            // Get image data for brightness analysis
+            const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+
+            // Calculate average brightness
+            let totalBrightness = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                totalBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            }
+            const avgBrightness = totalBrightness / (data.length / 4);
+
+            // Analyze center region for face detection simulation
+            const centerX = tempCanvas.width / 2;
+            const centerY = tempCanvas.height / 2;
+            const regionSize = 100;
+
+            let centerBrightness = 0;
+            let centerPixels = 0;
+            for (let y = centerY - regionSize; y < centerY + regionSize; y++) {
+                for (let x = centerX - regionSize; x < centerX + regionSize; x++) {
+                    if (x >= 0 && x < tempCanvas.width && y >= 0 && y < tempCanvas.height) {
+                        const i = (y * tempCanvas.width + x) * 4;
+                        centerBrightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        centerPixels++;
+                    }
+                }
+            }
+            const avgCenterBrightness = centerBrightness / centerPixels;
+
+            // Determine quality states
+            const hasGoodLighting = avgCenterBrightness > 70 && avgCenterBrightness < 230;
+            const hasContent = Math.abs(avgCenterBrightness - avgBrightness) > 12; // Sufficient contrast between face and background
+            const isCentered = hasContent; // Simplified check
+
+            // Update quality indicators
+            updateQualityIndicator(qualityFace, hasContent);
+            updateQualityIndicator(qualityLighting, hasGoodLighting);
+            updateQualityIndicator(qualityPosition, isCentered);
+            updateQualityIndicator(qualityClarity, hasGoodLighting && hasContent);
+
+            // Update face guide and enable/disable capture
+            const allGood = hasContent && hasGoodLighting && isCentered;
+
+            if (allGood) {
+                faceGuide.className = 'face-guide success';
+                guideText.className = 'guide-text success';
+                guideText.textContent = '✓ Perfect! Click Capture Photo';
+                captureBtn.disabled = false;
+            } else {
+                faceGuide.className = 'face-guide error';
+                guideText.className = 'guide-text error';
+                if (!hasContent) {
+                    guideText.textContent = '✗ No face detected - look at camera';
+                } else if (!hasGoodLighting) {
+                    if (avgCenterBrightness < 70 && avgBrightness > 150) {
+                        guideText.textContent = '✗ Backlight issue - move away from window';
+                    } else {
+                        guideText.textContent = '✗ Adjust lighting - too dark or too bright';
+                    }
+                } else {
+                    guideText.textContent = '✗ Center your face in the oval';
+                }
+                captureBtn.disabled = true; // Disable capture if ANY quality metric fails
+            }
+        }
+
+        function updateQualityIndicator(element, isGood) {
+            element.classList.remove('good', 'bad', 'warning');
+            element.classList.add(isGood ? 'good' : 'bad');
+        }
+
+        function captureImage() {
+            // Draw the current video frame to the canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            // Flip horizontally to match the mirrored video
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Compress the image to reduce size
+            capturedImage = compressImage(canvas, 0.8); // 80% quality
+
+            // Display the captured image
+            imagePreview.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = capturedImage;
+            img.style.width = '200px';
+            img.style.height = '150px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '8px';
+
+            imagePreview.appendChild(img);
+
+            // Show captured section, hide video controls
+            capturedSection.style.display = 'block';
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display = 'inline-block';
+            registerBtn.style.display = 'inline-block';
+            faceGuide.style.display = 'none';
+            guideText.style.display = 'none';
+
+            statusMessage.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Photo captured! Review the image and click "Complete Registration" if it looks good.</div>';
+        }
+
+        function retakeImage() {
+            capturedImage = null;
+            imagePreview.innerHTML = '';
+
+            // Show video controls, hide captured section
+            capturedSection.style.display = 'none';
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            registerBtn.style.display = 'none';
+            faceGuide.style.display = 'block';
+            guideText.style.display = 'block';
+
+            statusMessage.innerHTML = '<div class="alert alert-info"><i class="fas fa-camera"></i> Position your face and capture a new photo.</div>';
+        }
+
+        function compressImage(canvas, quality) {
+            // Create a temporary canvas with smaller dimensions to reduce file size
+            const maxWidth = 640;
+            const maxHeight = 480;
+            let width = canvas.width;
+            let height = canvas.height;
+
+            // Calculate new dimensions while maintaining aspect ratio
+            if (width > height) {
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width = (width * maxHeight) / height;
+                    height = maxHeight;
+                }
+            }
+
+            // Create a temporary canvas with the new dimensions
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const ctx = tempCanvas.getContext('2d');
+
+            // Draw the original canvas onto the temporary canvas with new dimensions
+            ctx.drawImage(canvas, 0, 0, width, height);
+
+            // Convert to data URL with specified quality to further compress
+            return tempCanvas.toDataURL('image/jpeg', quality);
+        }
+
+        function registerFace() {
+            if (!capturedImage) {
+                statusMessage.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-circle"></i> Please capture an image first.</div>';
+                return;
+            }
+
+            registrationStatus.textContent = 'Processing...';
+            registrationStatus.className = 'status-badge status-processing';
+            registerBtn.disabled = true;
+            retakeBtn.disabled = true;
+            statusMessage.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Registering face, please wait... This may take a few seconds.</div>';
+
+            // Set the image data in the hidden form
+            imageDataInput.value = capturedImage;
+
+            // Submit the form
+            document.getElementById('face-registration-form').submit();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}My Profile - SmartCampus AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0 rounded-lg mt-4">
+            <div class="card-header bg-gradient bg-primary text-white text-center py-4">
+                <h3 class="font-weight-light my-2">My Profile</h3>
+            </div>
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    {% if student.face_image_path %}
+                    <img src="{{ url_for('face_images', filename=student.face_image_path) }}" alt="Profile Image"
+                        class="rounded-circle shadow"
+                        style="width: 180px; height: 180px; object-fit: cover; border: 5px solid #fff;">
+                    <div class="mt-2">
+                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Face Registered</span>
+                    </div>
+                    {% elif student.avatar %}
+                    <img src="{{ student.avatar }}" alt="Avatar" class="rounded-circle shadow"
+                        style="width: 180px; height: 180px; object-fit: cover; border: 5px solid #fff;">
+                    <div class="mt-2">
+                        <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Face
+                            Not Registered</span>
+                    </div>
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ student.name }}&background=random&size=180"
+                        alt="Avatar" class="rounded-circle shadow"
+                        style="width: 180px; height: 180px; object-fit: cover; border: 5px solid #fff;">
+                    <div class="mt-2">
+                        <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>No Image</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h2 class="text-center mb-0">{{ student.name }}</h2>
+                <p class="text-center text-muted mb-4">{{ student.role|title }}</p>
+
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="fw-bold text-secondary"><i class="fas fa-id-card me-2"></i>User ID</span>
+                        <span class="fw-bold">{{ student.user_id }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="fw-bold text-secondary"><i class="fas fa-envelope me-2"></i>Email</span>
+                        <span>{{ student.email }}</span>
+                    </div>
+                    {% if student.department %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="fw-bold text-secondary"><i class="fas fa-building me-2"></i>Department</span>
+                        <span>{{ student.department }}</span>
+                    </div>
+                    {% endif %}
+                    {% if student.batch %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="fw-bold text-secondary"><i class="fas fa-graduation-cap me-2"></i>Batch</span>
+                        <span>{{ student.batch }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <span class="fw-bold text-secondary"><i class="fas fa-toggle-on me-2"></i>Status</span>
+                        {% if student.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-primary"><i
+                            class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

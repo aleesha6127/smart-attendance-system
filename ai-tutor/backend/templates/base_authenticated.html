@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #2c3e50, #1a2530);
+            min-height: 100vh;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 .brand-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-header h4 i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .sidebar-nav a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 3px solid #3498db;
+        }
+
+        .sidebar-nav i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-nav .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar.collapsed .sidebar-nav a {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        .sidebar.collapsed .sidebar-nav i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .main-content {
+            margin-left: 70px;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .content-wrapper {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border-radius: 50px;
+        }
+
+        /* Alexa-style Floating Button */
+        .alexa-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .alexa-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .alexa-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .sidebar.collapsed .sidebar-nav a {
+            position: relative;
+        }
+
+        .sidebar.collapsed .sidebar-nav a:hover::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar.collapsed .sidebar-nav a:hover::before {
+            content: '';
+            position: absolute;
+            left: 62px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2c3e50;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-graduation-cap me-2"></i><span class="brand-text">SmartCampus AI</span></h4>
+        </div>
+        <nav class="sidebar-nav">
+            {% if session.role == 'admin' %}
+            <a href="{{ url_for('admin_dashboard') }}"
+                class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}" data-title="Dashboard">
+                <i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span>
+            </a>
+            <a href="{{ url_for('admin_users') }}" class="{% if request.endpoint == 'admin_users' %}active{% endif %}"
+                data-title="Manage Users">
+                <i class="fas fa-users"></i><span class="nav-text">Manage Users</span>
+            </a>
+            <a href="{{ url_for('admin_approvals') }}"
+                class="{% if request.endpoint == 'admin_approvals' %}active{% endif %}" data-title="User Approvals">
+                <i class="fas fa-user-check"></i><span class="nav-text">User Approvals</span>
+            </a>
+            <a href="{{ url_for('reports') }}" class="{% if request.endpoint == 'reports' %}active{% endif %}"
+                data-title="Reports">
+                <i class="fas fa-chart-bar"></i><span class="nav-text">Reports</span>
+            </a>
+            <a href="{{ url_for('admin_attendance_requests') }}"
+                class="{% if request.endpoint == 'admin_attendance_requests' %}active{% endif %}"
+                data-title="Attendance Requests">
+                <i class="fas fa-clock"></i><span class="nav-text">Attendance Requests</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="logout-link" data-title="Logout">
+                <i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span>
+            </a>
+            {% elif session.role == 'teacher' %}
+            <a href="{{ url_for('teacher_dashboard') }}"
+                class="{% if request.endpoint == 'teacher_dashboard' %}active{% endif %}" data-title="Dashboard">
+                <i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span>
+            </a>
+            <a href="{{ url_for('teacher_profile') }}"
+                class="{% if request.endpoint == 'teacher_profile' %}active{% endif %}" data-title="Profile">
+                <i class="fas fa-user"></i><span class="nav-text">Profile</span>
+            </a>
+            <a href="{{ url_for('teacher_mark_attendance') }}"
+                class="{% if request.endpoint == 'teacher_mark_attendance' %}active{% endif %}"
+                data-title="Mark Attendance">
+                <i class="fas fa-calendar-check"></i><span class="nav-text">Mark Attendance</span>
+            </a>
+            <a href="{{ url_for('teacher_class_monitor') }}"
+                class="{% if request.endpoint == 'teacher_class_monitor' %}active{% endif %}"
+                data-title="Class Monitor">
+                <i class="fas fa-video"></i><span class="nav-text">Class Monitor</span>
+            </a>
+            <a href="{{ url_for('teacher_daily_summary') }}"
+                class="{% if request.endpoint == 'teacher_daily_summary' %}active{% endif %}"
+                data-title="Daily Summary">
+                <i class="fas fa-chart-pie"></i><span class="nav-text">Daily Summary</span>
+            </a>
+
+            <a href="{{ url_for('teacher_attendance_requests') }}"
+                class="{% if request.endpoint == 'teacher_attendance_requests' %}active{% endif %}"
+                data-title="Attendance Requests">
+                <i class="fas fa-clock"></i><span class="nav-text">Attendance Requests</span>
+            </a>
+            <a href="{{ url_for('teacher_leave_requests') }}"
+                class="{% if request.endpoint == 'teacher_leave_requests' %}active{% endif %}"
+                data-title="Leave Requests">
+                <i class="fas fa-calendar-minus"></i><span class="nav-text">Leave Requests</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="logout-link" data-title="Logout">
+                <i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span>
+            </a>
+            {% elif session.role == 'student' %}
+            <a href="{{ url_for('student_dashboard') }}"
+                class="{% if request.endpoint == 'student_dashboard' %}active{% endif %}" data-title="Dashboard">
+                <i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span>
+            </a>
+            <a href="{{ url_for('student_attendance_history') }}"
+                class="{% if request.endpoint == 'student_attendance_history' %}active{% endif %}"
+                data-title="Attendance History">
+                <i class="fas fa-history"></i><span class="nav-text">Attendance History</span>
+            </a>
+            <a href="{{ url_for('student_view_requests') }}"
+                class="{% if request.endpoint == 'student_view_requests' %}active{% endif %}" data-title="My Requests">
+                <i class="fas fa-clock"></i><span class="nav-text">My Requests</span>
+            </a>
+            <a href="{{ url_for('student_leave_requests') }}"
+                class="{% if request.endpoint == 'student_leave_requests' %}active{% endif %}"
+                data-title="Leave Requests">
+                <i class="fas fa-calendar-minus"></i><span class="nav-text">Leave Requests</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="logout-link" data-title="Logout">
+                <i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <!-- Toggle Button -->
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+
+    <div class="main-content">
+        <nav class="navbar">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <h4 class="mb-0">{% block page_title %}{{ session.role|title }} Dashboard{% endblock %}</h4>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {% if session.get('face_image_path') %}
+                        <img src="{{ url_for('face_images', filename=session['face_image_path']) }}" alt="User Avatar"
+                            class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+                        {% elif session.get('avatar') %}
+                        <img src="{{ session.avatar }}" alt="User Avatar" class="rounded-circle" width="40" height="40"
+                            style="object-fit: cover;">
+                        {% else %}
+                        {{ session.name[0]|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="fw-bold">{{ session.name }}</div>
+                        <small class="text-muted">{{ session.role|title }}</small>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Alexa-style Floating Button -->
+    <button class="alexa-button" onclick="openAiTutorPage()">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function openAiTutorPage() {
+            window.location.href = "{{ url_for('ai_tutor_interface') }}";
+        }
+
+        // Toggle sidebar collapse/expand
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+
+            sidebar.classList.toggle('collapsed');
+            body.classList.toggle('sidebar-collapsed');
+
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // Restore sidebar state on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            }
+        });
+    </script>
+
+    <!-- GLOBAL ADMIN MODAL -->
+    {% if session.get('role') == 'admin' %}
+    <!-- User Details Modal -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <img id="modalUserImage" src="" alt="User Image" class="rounded-circle shadow"
+                            style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #fff;">
+                    </div>
+                    <h4 id="modalUserName" class="mb-1"></h4>
+                    <p id="modalUserRole" class="text-muted badge bg-light text-dark fs-6 mb-3"></p>
+
+                    <div class="text-start bg-light p-3 rounded">
+                        <div class="row mb-2">
+                            <div class="col-4 text-muted">User ID:</div>
+                            <div class="col-8 fw-bold" id="modalUserId"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4 text-muted">Email:</div>
+                            <div class="col-8 fw-bold" id="modalUserEmail"></div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4 text-muted">Password:</div>
+                            <div class="col-8">
+                                <div class="d-flex align-items-center">
+                                    <span class="text-muted me-2">••••••••</span>
+                                    <button class="btn btn-sm btn-outline-warning py-0 px-2"
+                                        onclick="togglePasswordReset()">
+                                        <i class="fas fa-key"></i> Reset
+                                    </button>
+                                </div>
+                                <div id="passwordResetDiv" class="mt-2" style="display: none;">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="newPasswordInput" class="form-control"
+                                            placeholder="New Password">
+                                        <button class="btn btn-warning text-dark"
+                                            onclick="resetUserPassword()">Update</button>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Enter new password to
+                                        override</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="studentFields" style="display: none;">
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Department:</div>
+                                <div class="col-8 fw-bold" id="modalUserDept"></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Batch:</div>
+                                <div class="col-8 fw-bold" id="modalUserBatch"></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Face Reg:</div>
+                                <div class="col-8 fw-bold" id="modalUserFaceStatus"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a id="modalEditLink" href="#" class="btn btn-primary">Edit User (Reset Password)</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentModalUserId = null;
+
+        function togglePasswordReset() {
+            const div = document.getElementById('passwordResetDiv');
+            if (div.style.display === 'none') {
+                div.style.display = 'block';
+                document.getElementById('newPasswordInput').focus();
+            } else {
+                div.style.display = 'none';
+            }
+        }
+
+        function resetUserPassword() {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            if (!newPassword) {
+                alert('Please enter a new password');
+                return;
+            }
+
+            if (!currentModalUserId) {
+                alert('User context lost. Please reopen the modal.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to change the password for this user?')) {
+                return;
+            }
+
+            fetch(`/api/users/${currentModalUserId}/reset_password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: newPassword }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Password updated successfully!');
+                        document.getElementById('passwordResetDiv').style.display = 'none';
+                        document.getElementById('newPasswordInput').value = '';
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating password');
+                });
+        }
+
+        function showUserDetails(userId) {
+            currentModalUserId = userId; // Store for password reset
+
+            // fetch user details
+            fetch(`/api/users/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+
+                        // Reset UI state
+                        const resetDiv = document.getElementById('passwordResetDiv');
+                        if (resetDiv) {
+                            resetDiv.style.display = 'none';
+                            document.getElementById('newPasswordInput').value = '';
+                        }
+
+                        // Update Modal Content
+                        document.getElementById('modalUserName').textContent = user.name;
+                        document.getElementById('modalUserId').textContent = user.user_id;
+                        document.getElementById('modalUserEmail').textContent = user.email || 'N/A';
+
+                        // Safely handle role display
+                        if (user.role) {
+                            document.getElementById('modalUserRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                        }
+
+                        document.getElementById('modalEditLink').href = `/admin/edit_user/${user.user_id}`;
+
+                        // Image handling
+                        const imgElement = document.getElementById('modalUserImage');
+
+                        // Force reflow/reset
+                        imgElement.src = '';
+
+                        if (user.face_image_path) {
+                            imgElement.src = `/face_images/${user.face_image_path}`;
+                            imgElement.onerror = function () {
+                                // Fallback if image fails to load
+                                if (user.avatar) {
+                                    this.src = user.avatar;
+                                } else {
+                                    this.src = `https://ui-avatars.com/api/?name=${user.name}&background=random`;
+                                }
+                            };
+
+                            const statusEl = document.getElementById('modalUserFaceStatus');
+                            if (statusEl) {
+                                statusEl.textContent = 'Registered ✅';
+                                statusEl.className = 'col-8 fw-bold text-success';
+                            }
+                        } else {
+                            if (user.avatar) {
+                                imgElement.src = user.avatar;
+                            } else {
+                                imgElement.src = `https://ui-avatars.com/api/?name=${user.name}&background=random`;
+                            }
+                            const statusEl = document.getElementById('modalUserFaceStatus');
+                            if (statusEl) {
+                                statusEl.textContent = 'Not Registered ❌';
+                                statusEl.className = 'col-8 fw-bold text-danger';
+                            }
+                        }
+
+                        // Student specific fields
+                        const studentFields = document.getElementById('studentFields');
+                        if (studentFields) {
+                            if (user.role === 'student') {
+                                studentFields.style.display = 'block';
+                                document.getElementById('modalUserDept').textContent = user.department || 'N/A';
+                                document.getElementById('modalUserBatch').textContent = user.batch || 'N/A';
+                            } else {
+                                studentFields.style.display = 'none';
+                            }
+                        }
+
+                        // Show Modal
+                        const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+                        modal.show();
+                    } else {
+                        alert('Failed to load user details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading user details');
+                });
+        }
+    </script>
+    {% endif %}
+</body>
+
+</html>

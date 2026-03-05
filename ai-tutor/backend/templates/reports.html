@@ -1,0 +1,379 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Reports - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+    }
+
+    .reports-container {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .reports-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .reports-header:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .report-card {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fbfd);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        height: 100%;
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 20px;
+    }
+
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        padding: 25px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        border: none;
+        text-align: center;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+        box-shadow: var(--hover-shadow);
+        background: linear-gradient(135deg, #fff, #f0f5ff);
+    }
+
+    .stat-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .stat-label {
+        font-size: 1.1em;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .report-form {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.2);
+    }
+
+    .section-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: var(--primary-color);
+    }
+
+    .section-title {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.2em;
+    }
+
+    .attendance-trend {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+
+    .trend-label {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .trend-value {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+    .positive-trend {
+        color: #27ae60;
+    }
+
+    .negative-trend {
+        color: #e74c3c;
+    }
+</style>
+
+<div class="reports-container">
+    <div class="container">
+        <!-- Reports Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="reports-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1 text-dark"><i class="fas fa-chart-bar me-3"></i>Reports Dashboard</h2>
+                            <p class="text-muted mb-0">Comprehensive analytics and insights for your academic
+                                institution</p>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ total_students + total_teachers + total_admins }}</h4>
+                            <small class="text-muted">Total Members</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number text-primary">{{ total_students }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-info">{{ total_teachers }}</div>
+                <div class="stat-label">Teachers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-danger">{{ total_admins }}</div>
+                <div class="stat-label">Administrators</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-success">{{ total_attendance_records }}</div>
+                <div class="stat-label">Attendance Records</div>
+            </div>
+        </div>
+
+        <!-- Report Generation Form -->
+        <div class="report-form">
+            <h5 class="mb-4 text-primary"><i class="fas fa-cogs me-2"></i>Generate Custom Reports</h5>
+            <form method="POST" action="{{ url_for('generate_report') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="report_type" class="form-label">Report Type</label>
+                            <select class="form-select" id="report_type" name="report_type" required>
+                                <option value="daily_attendance">Daily Attendance Report</option>
+                                <option value="weekly_summary">Weekly Summary Report</option>
+                                <option value="monthly_analysis">Monthly Analysis Report</option>
+                                <option value="student_performance">Student Performance Report</option>
+                                <option value="teacher_activity">Teacher Activity Report</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-file-download me-2"></i>Generate
+                    Report</button>
+            </form>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="row">
+            <!-- Recent Activity -->
+            <div class="col-lg-8 mb-4">
+                <div class="report-card">
+                    <div class="section-header">
+                        <i class="fas fa-history section-icon"></i>
+                        <h5 class="section-title">Recent Attendance Activity</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-user me-1"></i>Student</th>
+                                    <th><i class="fas fa-id-card me-1"></i>ID</th>
+                                    <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                    <th><i class="fas fa-clock me-1"></i>Period</th>
+                                    <th><i class="fas fa-check-circle me-1"></i>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_attendance %}
+                                <tr>
+                                    <td>{{ record.name }}</td>
+                                    <td>{{ record.user_id }}</td>
+                                    <td>{{ record.date }}</td>
+                                    <td>Period {{ record.period }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if record.status == 'present' %}bg-success
+                                            {% elif record.status == 'late' %}bg-warning
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ record.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not recent_attendance %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No recent attendance records found
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends and Analytics -->
+            <div class="col-lg-4 mb-4">
+                <div class="report-card">
+                    <div class="section-header">
+                        <i class="fas fa-chart-line section-icon"></i>
+                        <h5 class="section-title">Attendance Trends</h5>
+                    </div>
+
+                    <div class="attendance-trend">
+                        <div class="trend-label">Last 7 Days</div>
+                        <div class="trend-value positive-trend">+12.5%</div>
+                    </div>
+
+                    <div class="attendance-trend">
+                        <div class="trend-label">This Month</div>
+                        <div class="trend-value positive-trend">+8.3%</div>
+                    </div>
+
+                    <div class="attendance-trend">
+                        <div class="trend-label">Teacher Activity</div>
+                        <div class="trend-value positive-trend">High</div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6 class="text-center mb-3">Attendance by Date</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in attendance_by_date %}
+                                    <tr>
+                                        <td>{{ item.date }}</td>
+                                        <td>{{ item.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if not attendance_by_date %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">No data available</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Performance -->
+        <div class="row">
+            <div class="col-12">
+                <div class="report-card">
+                    <div class="section-header">
+                        <i class="fas fa-chalkboard-teacher section-icon"></i>
+                        <h5 class="section-title">Teacher Activity Overview</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-user me-1"></i>Teacher Name</th>
+                                    <th><i class="fas fa-check-circle me-1"></i>Attendance Marked</th>
+                                    <th><i class="fas fa-star me-1"></i>Activity Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for teacher in attendance_by_teacher %}
+                                <tr>
+                                    <td>{{ teacher.name }}</td>
+                                    <td>{{ teacher.count }}</td>
+                                    <td>
+                                        <span class="badge bg-info">Active</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not attendance_by_teacher %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No attendance records marked by
+                                        teachers</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

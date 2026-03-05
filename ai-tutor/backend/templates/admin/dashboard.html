@@ -1,0 +1,885 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Admin Dashboard - SmartCampus AI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --success-color: #2ecc71;
+        --warning-color: #f39c12;
+        --light-bg: #ecf0f1;
+        --dark-bg: #2c3e50;
+        --card-bg: #ffffff;
+        --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        --gradient-start: #1e3c72;
+        --gradient-end: #2a5298;
+        --card-gradient-start: #ffffff;
+        --card-gradient-end: #f8f9fa;
+        --border-radius: 16px;
+    }
+
+    .admin-dashboard {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        min-height: 100vh;
+        padding: 25px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .admin-dashboard::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 20%),
+            radial-gradient(circle at 90% 80%, rgba(52, 152, 219, 0.1) 0%, transparent 20%);
+        pointer-events: none;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(52, 152, 219, 0.1), transparent 30%);
+        animation: rotate 8s linear infinite;
+        z-index: 0;
+    }
+
+    .dashboard-header:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .logout-button {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .logout-button:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .logout-button i {
+        transition: transform 0.3s ease;
+    }
+
+    .logout-button:hover i {
+        transform: translateX(-3px);
+    }
+
+    .stat-card-modern {
+        background: linear-gradient(145deg, var(--card-gradient-start), var(--card-gradient-end));
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        border: none;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-card-modern:hover {
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: var(--hover-shadow);
+        background: linear-gradient(145deg, #fff, #f0f8ff);
+    }
+
+    .stat-card-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+        transform-origin: left;
+    }
+
+    .stat-card-modern:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-icon-container {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-icon-students {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .stat-icon-teachers {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+    }
+
+    .stat-icon-admins {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .stat-icon-attendance {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+    }
+
+    .stat-card-modern:hover .stat-icon-container {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .activity-card-modern {
+        background: linear-gradient(to bottom, var(--card-bg), #f9fcff);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 30px;
+        height: 100%;
+        transition: all 0.4s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .activity-card-modern:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--hover-shadow);
+    }
+
+    .activity-card-modern::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, var(--secondary-color), var(--accent-color), var(--success-color));
+    }
+
+    .section-header-modern {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(52, 152, 219, 0.15);
+        position: relative;
+    }
+
+    .section-header-modern::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+        border-radius: 2px;
+    }
+
+    .section-icon-modern {
+        margin-right: 12px;
+        font-size: 1.3em;
+        color: var(--secondary-color);
+        background: rgba(52, 152, 219, 0.1);
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .section-title-modern {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1.3em;
+        letter-spacing: 0.5px;
+    }
+
+    .welcome-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        transform: rotate(30deg);
+    }
+
+    .welcome-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .avatar-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 24px;
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-number-modern {
+        font-size: 2.8em;
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label-modern {
+        font-size: 1.1em;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+
+    .role-badge-modern {
+        padding: 8px 18px;
+        border-radius: 25px;
+        font-size: 0.9em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .role-admin-modern {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+    }
+
+    .role-teacher-modern {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+        box-shadow: 0 3px 10px rgba(243, 156, 18, 0.3);
+    }
+
+    .role-student-modern {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+    }
+
+    .progress-modern {
+        height: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar-modern {
+        border-radius: 10px;
+        transition: width 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar-modern::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            left: -100%;
+        }
+
+        100% {
+            left: 100%;
+        }
+    }
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .floating-elements {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .floating-element {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        animation: float 15s infinite ease-in-out;
+    }
+
+    .element-1 {
+        width: 80px;
+        height: 80px;
+        top: 10%;
+        left: 5%;
+        animation-delay: 0s;
+    }
+
+    .element-2 {
+        width: 60px;
+        height: 60px;
+        top: 20%;
+        right: 10%;
+        animation-delay: 2s;
+    }
+
+    .element-3 {
+        width: 40px;
+        height: 40px;
+        bottom: 15%;
+        left: 15%;
+        animation-delay: 4s;
+    }
+
+    .element-4 {
+        width: 100px;
+        height: 100px;
+        bottom: 25%;
+        right: 5%;
+        animation-delay: 6s;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0px) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-20px) rotate(180deg);
+        }
+    }
+</style>
+
+<div class="admin-dashboard" data-attendance-rate="{{ overall_attendance_rate }}"
+    data-high-attendance="{{ ((total_students - low_attendance_students)/total_students * 100) if total_students > 0 else 0 }}"
+    data-low-attendance="{{ (low_attendance_students/total_students * 100) if total_students > 0 else 0 }}">
+    <div class="floating-elements">
+        <div class="floating-element element-1"></div>
+        <div class="floating-element element-2"></div>
+        <div class="floating-element element-3"></div>
+        <div class="floating-element element-4"></div>
+    </div>
+
+    <div class="container position-relative" style="z-index: 1;">
+        <!-- Welcome Banner -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-banner">
+                    <div class="welcome-content">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="avatar-circle">
+                                    {{ session.name[0].upper() if session.name else 'A' }}
+                                </div>
+                                <div>
+                                    <h2 class="mb-2">Welcome Back, {{ session.name or 'Admin' }}!</h2>
+                                    <p class="mb-0 opacity-75">System Administrator Dashboard - Manage Your Institution
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-center">
+                                    <h3 class="mb-1 total-members-header">{{ total_members }}</h3>
+                                    <small>Total Members</small>
+                                </div>
+                                <div class="vr text-white opacity-25"></div>
+                                <div class="text-center">
+                                    <h3 class="mb-1 pending-requests-header">{{ pending_requests }}</h3>
+                                    <small>Pending Requests</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-5">
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="stat-card-modern">
+                    <div class="stat-icon-container stat-icon-students">
+                        <i class="fas fa-graduation-cap fa-2x text-white"></i>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number-modern" id="total-students">{{ total_students }}</div>
+                        <div class="stat-label-modern">Students</div>
+                    </div>
+                    <div class="mt-auto pt-3">
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-primary" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="stat-card-modern">
+                    <div class="stat-icon-container stat-icon-teachers">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-white"></i>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number-modern" id="total-teachers">{{ total_teachers }}</div>
+                        <div class="stat-label-modern">Faculty</div>
+                    </div>
+                    <div class="mt-auto pt-3">
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-warning" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="stat-card-modern">
+                    <div class="stat-icon-container stat-icon-admins">
+                        <i class="fas fa-user-shield fa-2x text-white"></i>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number-modern" id="total-admins">{{ total_admins }}</div>
+                        <div class="stat-label-modern">Administrators</div>
+                    </div>
+                    <div class="mt-auto pt-3">
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-danger" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="stat-card-modern">
+                    <div class="stat-icon-container stat-icon-attendance">
+                        <i class="fas fa-chart-line fa-2x text-white"></i>
+                    </div>
+                    <div class="text-center">
+                        <div class="stat-number-modern" id="overall-attendance">{{
+                            "%.1f"|format(overall_attendance_rate) }}%</div>
+                        <div class="stat-label-modern">Avg. Attendance</div>
+                    </div>
+                    <div class="mt-auto pt-3">
+                        <div class="progress-modern">
+                            <div class="progress-bar-modern bg-success attendance-progress" role="progressbar"
+                                aria-valuenow="{{ overall_attendance_rate }}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="row">
+            <!-- Recent Activities -->
+            <div class="col-lg-8 mb-4">
+                <div class="activity-card-modern">
+                    <div class="section-header-modern">
+                        <div class="section-icon-modern">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h5 class="section-title-modern">Recent User Activities</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-user me-2"></i>User</th>
+                                    <th><i class="fas fa-id-badge me-2"></i>Role</th>
+                                    <th><i class="fas fa-building me-2"></i>Department</th>
+                                    <th><i class="fas fa-calendar-plus me-2"></i>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr class="align-middle" onclick="showUserDetails('{{ user.user_id }}')"
+                                    style="cursor: pointer;">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                {% if user.face_image_path %}
+                                                <img src="{{ url_for('face_images', filename=user.face_image_path) }}"
+                                                    alt="User Avatar" class="rounded-circle" width="40" height="40"
+                                                    style="object-fit: cover;">
+                                                {% elif user.avatar %}
+                                                <img src="{{ user.avatar }}" alt="Avatar" class="rounded-circle"
+                                                    width="40" height="40" style="object-fit: cover;">
+                                                {% else %}
+                                                <div class="avatar-circle"
+                                                    style="width: 40px; height: 40px; font-size: 16px;">
+                                                    {{ user.name[0].upper() if user.name else 'U' }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ user.name }}</div>
+                                                <small class="text-muted">{{ user.user_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge-modern 
+                                            {% if user.role == 'admin' %}role-admin-modern
+                                            {% elif user.role == 'teacher' %}role-teacher-modern
+                                            {% else %}role-student-modern{% endif %}">
+                                            <i
+                                                class="fas fa-{% if user.role == 'admin' %}shield-alt{% elif user.role == 'teacher' %}chalkboard-teacher{% else %}graduation-cap{% endif %}"></i>
+                                            {{ user.role|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ user.department or 'General' }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ user.created_at[:10] if user.created_at else 'N/A' }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not recent_users %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <i class="fas fa-users-slash fa-2x mb-3 d-block"></i>
+                                        No recent user activities
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Overview -->
+            <div class="col-lg-4 mb-4">
+                <div class="activity-card-modern">
+                    <div class="section-header-modern">
+                        <div class="section-icon-modern">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <h5 class="section-title-modern">Institution Overview</h5>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3 fw-bold">Attendance Distribution</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-medium">High Performers (>85%)</span>
+                                <span class="text-success fw-bold high-performers-text">{{ ((total_students -
+                                    low_attendance_students)/total_students * 100) | round(1) if total_students > 0 else
+                                    0 }}%</span>
+                            </div>
+                            <div class="progress-modern">
+                                <div class="progress-bar-modern bg-success high-attendance-progress" style="width: 1%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-medium">Needs Attention (<85%)< /span>
+                                        <span class="text-danger fw-bold needs-attention-text">{{
+                                            (low_attendance_students/total_students *
+                                            100) | round(1) if total_students > 0 else 0 }}%</span>
+                            </div>
+                            <div class="progress-modern">
+                                <div class="progress-bar-modern bg-danger low-attendance-progress" style="width: 1%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-4 mt-2">
+                        <h6 class="mb-3 fw-bold">System Status</h6>
+                        <div class="d-grid gap-3">
+                            <div class="d-flex align-items-center justify-content-between p-3 rounded bg-light-subtle">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-warning p-2 me-3">
+                                        <i class="fas fa-exclamation text-white"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">Pending Requests</div>
+                                        <small class="text-muted">Attendance appeals</small>
+                                    </div>
+                                </div>
+                                <h4 class="text-warning mb-0" id="pending-status-count">{{ pending_requests }}</h4>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between p-3 rounded bg-light-subtle">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-info p-2 me-3">
+                                        <i class="fas fa-database text-white"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">Database Status</div>
+                                        <small class="text-muted">Operational</small>
+                                    </div>
+                                </div>
+                                <div class="text-success">
+                                    <i class="fas fa-check-circle fa-lg"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set dynamic width for progress bars with smooth animation
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.querySelector('.admin-dashboard');
+
+        function updateProgressBars() {
+            const container = document.querySelector('.admin-dashboard');
+            const attendanceRate = parseFloat(container.dataset.attendanceRate || 0);
+            const highAttendanceRate = parseFloat(container.dataset.highAttendance || 0);
+            const lowAttendanceRate = parseFloat(container.dataset.lowAttendance || 0);
+
+            const attendanceProgress = document.querySelector('.attendance-progress');
+            const highAttendanceProgress = document.querySelector('.high-attendance-progress');
+            const lowAttendanceProgress = document.querySelector('.low-attendance-progress');
+
+            if (attendanceProgress) attendanceProgress.style.width = attendanceRate + '%';
+            if (highAttendanceProgress) highAttendanceProgress.style.width = highAttendanceRate + '%';
+            if (lowAttendanceProgress) lowAttendanceProgress.style.width = lowAttendanceRate + '%';
+        }
+
+        // Initial animation
+        setTimeout(updateProgressBars, 500);
+
+        // Real-time update function
+        function refreshDashboard() {
+            fetch('/api/admin/dashboard_stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.stats;
+                        const container = document.querySelector('.admin-dashboard');
+
+                        // Update header totals if they exist in banner
+                        const totalHeader = document.querySelector('.total-members-header');
+                        if (totalHeader) totalHeader.textContent = stats.total_members;
+
+                        const totalStudentsElement = document.getElementById('total-students');
+                        if (totalStudentsElement) totalStudentsElement.textContent = stats.total_students;
+
+                        const totalTeachersElement = document.getElementById('total-teachers');
+                        if (totalTeachersElement) totalTeachersElement.textContent = stats.total_teachers;
+
+                        const totalAdminsElement = document.getElementById('total-admins');
+                        if (totalAdminsElement) totalAdminsElement.textContent = stats.total_admins;
+
+                        // Update Data Attributes
+                        container.dataset.attendanceRate = stats.overall_attendance_rate;
+                        container.dataset.highAttendance = ((stats.total_students - stats.low_attendance_students) / stats.total_students * 100) || 0;
+                        container.dataset.lowAttendance = (stats.low_attendance_students / stats.total_students * 100) || 0;
+
+                        // Update Header Stats (Banner) using specific classes/IDs
+                        if (totalHeader) totalHeader.textContent = stats.total_members;
+                        const pendingHeader = document.querySelector('.pending-requests-header');
+                        if (pendingHeader) pendingHeader.textContent = stats.pending_requests;
+
+                        // Update Main Stat Cards using IDs
+                        const studentStat = document.getElementById('total-students');
+                        if (studentStat) studentStat.textContent = stats.total_students;
+
+                        const teacherStat = document.getElementById('total-teachers');
+                        if (teacherStat) teacherStat.textContent = stats.total_teachers;
+
+                        const adminStat = document.getElementById('total-admins');
+                        if (adminStat) adminStat.textContent = stats.total_admins;
+
+                        const attendanceStat = document.getElementById('overall-attendance');
+                        if (attendanceStat) attendanceStat.textContent = stats.overall_attendance_rate + '%';
+
+                        // Update Institution Overview Text
+                        const highPerfText = document.querySelector('.high-performers-text');
+                        if (highPerfText) highPerfText.textContent = Math.round(container.dataset.highAttendance * 10) / 10 + '%';
+
+                        const needsAttentionText = document.querySelector('.needs-attention-text');
+                        if (needsAttentionText) needsAttentionText.textContent = Math.round(container.dataset.lowAttendance * 10) / 10 + '%';
+
+                        const pendingStatus = document.getElementById('pending-status-count');
+                        if (pendingStatus) pendingStatus.textContent = stats.pending_requests;
+
+                        // Refresh Visuals
+                        updateProgressBars();
+
+                        // Update Table if needed
+                        updateActivityTable(data.recent_activities);
+                    }
+                })
+                .catch(err => console.error('Dashboard refresh failed:', err));
+        }
+
+        function updateActivityTable(activities) {
+            const tbody = document.querySelector('tbody');
+            if (!activities || activities.length === 0) return;
+
+            let html = '';
+            activities.forEach(user => {
+                const avatarImg = user.face_image_path ? `/face_images/${user.face_image_path}` : (user.avatar || '');
+                const firstChar = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+                const avatarHtml = avatarImg ? `<img src="${avatarImg}" alt="Avatar" class="rounded-circle" width="40" height="40" style="object-fit: cover;">` :
+                    `<div class="avatar-circle" style="width: 40px; height: 40px; font-size: 16px;">${firstChar}</div>`;
+
+                const roleClass = user.role === 'admin' ? 'role-admin-modern' :
+                    user.role === 'teacher' ? 'role-teacher-modern' : 'role-student-modern';
+
+                const roleIcon = user.role === 'admin' ? 'shield-alt' :
+                    user.role === 'teacher' ? 'chalkboard-teacher' : 'graduation-cap';
+
+                html += `
+                <tr class="align-middle" onclick="showUserDetails('${user.user_id}')" style="cursor: pointer; transition: transform 0.3s ease;">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">${avatarHtml}</div>
+                            <div>
+                                <div class="fw-semibold">${user.name}</div>
+                                <small class="text-muted">${user.user_id}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-badge-modern ${roleClass}">
+                            <i class="fas fa-${roleIcon}"></i>
+                            ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </span>
+                    </td>
+                    <td><span class="badge bg-light text-dark">${user.department || 'General'}</span></td>
+                    <td><small>${user.created_at || 'N/A'}</small></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Poll every 5 seconds for real-time data
+        setInterval(refreshDashboard, 5000);
+
+        // Hover effects for table rows (re-apply since we replace HTML)
+        const observer = new MutationObserver(() => {
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('mouseenter', () => row.style.transform = 'translateX(5px)');
+                row.addEventListener('mouseleave', () => row.style.transform = 'translateX(0)');
+            });
+        });
+        observer.observe(document.querySelector('tbody'), { childList: true });
+    });
+</script>
+{% endblock %}

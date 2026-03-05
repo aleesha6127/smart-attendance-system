@@ -1,0 +1,1619 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}SmartCampus AI Assistant - Smart Attendance System{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --dark-gradient: linear-gradient(135deg, #0c1445 0%, #1a1a2e 50%, #16213e 100%);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-glow: 0 8px 32px rgba(102, 126, 234, 0.4);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
+    .ai-tutor-container {
+        background: var(--dark-gradient);
+        min-height: 100vh;
+        padding: 30px 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Animated background particles */
+    .ai-tutor-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(79, 172, 254, 0.2) 0%, transparent 40%);
+        animation: backgroundPulse 8s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes backgroundPulse {
+
+        0%,
+        100% {
+            opacity: 0.5;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+    }
+
+    /* Floating orbs */
+    .floating-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        animation: floatOrb 15s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .orb-1 {
+        width: 300px;
+        height: 300px;
+        background: rgba(102, 126, 234, 0.4);
+        top: 10%;
+        left: -5%;
+        animation-delay: 0s;
+    }
+
+    .orb-2 {
+        width: 250px;
+        height: 250px;
+        background: rgba(118, 75, 162, 0.3);
+        top: 60%;
+        right: -5%;
+        animation-delay: -5s;
+    }
+
+    .orb-3 {
+        width: 200px;
+        height: 200px;
+        background: rgba(79, 172, 254, 0.3);
+        bottom: 10%;
+        left: 30%;
+        animation-delay: -10s;
+    }
+
+    @keyframes floatOrb {
+
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1);
+        }
+
+        33% {
+            transform: translate(30px, -30px) scale(1.1);
+        }
+
+        66% {
+            transform: translate(-20px, 20px) scale(0.9);
+        }
+    }
+
+    .ai-tutor-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-glow);
+        padding: 30px 40px;
+        margin-bottom: 30px;
+        border: 1px solid var(--glass-border);
+        position: relative;
+        z-index: 10;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .ai-tutor-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.5);
+    }
+
+    .ai-tutor-header h2 {
+        color: var(--text-primary);
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .ai-tutor-header p {
+        color: var(--text-secondary);
+    }
+
+    .user-info h4 {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+    }
+
+    .user-info small {
+        color: var(--text-secondary);
+    }
+
+    /* Main AI Avatar */
+    .ai-avatar-container {
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .ai-avatar {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ai-avatar-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #667eea;
+        border-bottom-color: #764ba2;
+        animation: spin 3s linear infinite;
+    }
+
+    .ai-avatar-ring-2 {
+        width: 90%;
+        height: 90%;
+        border-top-color: #4facfe;
+        border-bottom-color: #00f2fe;
+        animation: spin 2s linear infinite reverse;
+    }
+
+    .ai-avatar-ring-3 {
+        width: 80%;
+        height: 80%;
+        border-top-color: #f093fb;
+        border-bottom-color: #f5576c;
+        animation: spin 4s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .ai-avatar-core {
+        width: 120px;
+        height: 120px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 60px rgba(102, 126, 234, 0.6);
+        position: relative;
+        z-index: 2;
+    }
+
+    .ai-avatar-core i {
+        font-size: 3.5rem;
+        color: white;
+        animation: robotFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes robotFloat {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .ai-avatar.speaking .ai-avatar-core {
+        animation: speakingPulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes speakingPulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 60px rgba(102, 126, 234, 0.6);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 80px rgba(102, 126, 234, 0.8);
+        }
+    }
+
+    /* Welcome Text */
+    .welcome-section {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+        text-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
+    }
+
+    .welcome-subtitle {
+        font-size: 1.3rem;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+    }
+
+    .welcome-description {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1rem;
+    }
+
+    /* Control Buttons */
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .control-btn {
+        padding: 18px 35px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 60px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .control-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .control-btn:hover::before {
+        left: 100%;
+    }
+
+    .btn-voice {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-voice:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-greeting {
+        background: var(--accent-gradient);
+        color: white;
+        box-shadow: 0 8px 30px rgba(79, 172, 254, 0.4);
+    }
+
+    .btn-greeting:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 40px rgba(79, 172, 254, 0.6);
+    }
+
+    .btn-type {
+        background: var(--secondary-gradient);
+        color: white;
+        box-shadow: 0 8px 30px rgba(240, 147, 251, 0.4);
+    }
+
+    .btn-type:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 40px rgba(240, 147, 251, 0.6);
+    }
+
+    .btn-mute {
+        background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+        color: white;
+        box-shadow: 0 8px 30px rgba(255, 94, 98, 0.4);
+    }
+
+    .btn-mute:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 40px rgba(255, 94, 98, 0.6);
+    }
+
+    /* Typing Interface */
+    .typing-interface {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid var(--glass-border);
+        display: none;
+        position: relative;
+        z-index: 10;
+    }
+
+    .typing-interface.show {
+        display: block;
+        animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .typing-interface label {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .typing-interface input {
+        width: 100%;
+        padding: 18px 25px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        border: 2px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .typing-interface input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .typing-interface input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .send-btn {
+        margin-top: 20px;
+        padding: 15px 40px;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+    }
+
+    /* Display Area */
+    .display-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 40px;
+        border: 1px solid var(--glass-border);
+        position: relative;
+        z-index: 10;
+        min-height: 150px;
+    }
+
+    .display-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+        border-radius: 24px 24px 0 0;
+    }
+
+    #display-area {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    #display-area p {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        line-height: 1.8;
+        margin: 0;
+    }
+
+    #display-area .text-primary {
+        color: #667eea !important;
+    }
+
+    #display-area .text-success {
+        color: #4facfe !important;
+    }
+
+    #display-area .text-danger {
+        color: #f5576c !important;
+    }
+
+    #display-area .text-info {
+        color: #00f2fe !important;
+    }
+
+    .listening-animation {
+        animation: listeningPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes listeningPulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    /* Instructions */
+    .instructions {
+        text-align: center;
+        margin-top: 30px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .instructions p {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+    }
+
+    /* Floating Robot Mascot */
+    .mascot-container {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 1000;
+    }
+
+    .mascot {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+    }
+
+    .mascot:hover {
+        transform: scale(1.15) rotate(10deg);
+        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.7);
+    }
+
+    .mascot i {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .mascot-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        animation: mascotPulse 2s ease-out infinite;
+        opacity: 0;
+    }
+
+    @keyframes mascotPulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scale(1.8);
+            opacity: 0;
+        }
+    }
+
+    /* Sound wave indicator */
+    .sound-wave {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-bottom: 15px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        padding: 10px 20px;
+        border-radius: 20px;
+        border: 1px solid var(--glass-border);
+    }
+
+    .sound-wave.active {
+        display: flex;
+        gap: 4px;
+        align-items: flex-end;
+    }
+
+    .sound-wave span {
+        width: 4px;
+        height: 20px;
+        background: #667eea;
+        border-radius: 2px;
+        animation: soundWave 0.5s ease-in-out infinite alternate;
+    }
+
+    .sound-wave span:nth-child(2) {
+        animation-delay: 0.1s;
+        height: 30px;
+    }
+
+    .sound-wave span:nth-child(3) {
+        animation-delay: 0.2s;
+        height: 25px;
+    }
+
+    .sound-wave span:nth-child(4) {
+        animation-delay: 0.3s;
+        height: 35px;
+    }
+
+    .sound-wave span:nth-child(5) {
+        animation-delay: 0.4s;
+        height: 20px;
+    }
+
+    @keyframes soundWave {
+        from {
+            transform: scaleY(0.5);
+        }
+
+        to {
+            transform: scaleY(1);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .ai-avatar {
+            width: 140px;
+            height: 140px;
+        }
+
+        .ai-avatar-core {
+            width: 90px;
+            height: 90px;
+        }
+
+        .ai-avatar-core i {
+            font-size: 2.5rem;
+        }
+
+        .welcome-title {
+            font-size: 1.8rem;
+        }
+
+        .control-btn {
+            padding: 14px 25px;
+            font-size: 1rem;
+        }
+
+        .controls {
+            gap: 12px;
+        }
+    }
+
+    /* Chat Sidebar Styles */
+    .chat-sidebar {
+        position: fixed;
+        left: -350px;
+        top: 0;
+        width: 350px;
+        height: 100vh;
+        background: rgba(20, 20, 40, 0.98);
+        border-right: 1px solid rgba(102, 126, 234, 0.3);
+        z-index: 10000;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sidebar-header h3 {
+        color: white;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+    .sidebar-header h3 i {
+        color: #667eea;
+        margin-right: 10px;
+    }
+
+    .sidebar-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px 10px;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-close:hover {
+        color: #667eea;
+        transform: rotate(90deg);
+    }
+
+    .sidebar-toggle-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .sidebar-toggle-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .new-chat-btn {
+        margin: 20px;
+        width: calc(100% - 40px);
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .new-chat-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .new-chat-btn i {
+        margin-right: 8px;
+    }
+
+    .sessions-list {
+        padding: 0 20px 20px;
+    }
+
+    .session-item {
+        padding: 15px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .session-item:hover {
+        background: rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.5);
+        transform: translateX(5px);
+    }
+
+    .session-item.active {
+        background: rgba(102, 126, 234, 0.3);
+        border-color: rgba(102, 126, 234, 0.7);
+    }
+
+    .session-title {
+        color: white;
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .session-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .sessions-loading {
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+        padding: 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Welcome Overlay */
+    .welcome-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--dark-gradient);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .welcome-overlay.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .welcome-overlay-content {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .welcome-overlay-avatar {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 30px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 80px rgba(102, 126, 234, 0.6);
+        animation: overlayPulse 2s ease-in-out infinite;
+    }
+
+    .welcome-overlay-avatar i {
+        font-size: 4rem;
+        color: white;
+    }
+
+    @keyframes overlayPulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 80px rgba(102, 126, 234, 0.6);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 100px rgba(102, 126, 234, 0.8);
+        }
+    }
+
+    .welcome-overlay h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+    }
+
+    .welcome-overlay p {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+
+    .enter-btn {
+        padding: 20px 50px;
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 60px;
+        cursor: pointer;
+        box-shadow: 0 8px 40px rgba(102, 126, 234, 0.5);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: inline-flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .enter-btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 12px 50px rgba(102, 126, 234, 0.7);
+    }
+
+    .enter-btn i {
+        font-size: 1.5rem;
+    }
+</style>
+
+<!-- Welcome Overlay -->
+<div class="welcome-overlay" id="welcome-overlay">
+    <div class="welcome-overlay-content">
+        <div class="welcome-overlay-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <h1>👋 Hello {{ session.name }}!</h1>
+        {% if session.role == 'teacher' %}
+        <p>Your SmartCampus AI Assistant is ready to support your teaching</p>
+        <button class="enter-btn" onclick="enterTutor()">
+            <i class="fas fa-play"></i>
+            <span>Get Started</span>
+        </button>
+        {% elif session.role == 'admin' %}
+        <p>Your SmartCampus AI Assistant is ready to help with administration</p>
+        <button class="enter-btn" onclick="enterTutor()">
+            <i class="fas fa-play"></i>
+            <span>Get Started</span>
+        </button>
+        {% else %}
+        <p>Your SmartCampus AI Assistant is ready to help you learn</p>
+        <button class="enter-btn" onclick="enterTutor()">
+            <i class="fas fa-play"></i>
+            <span>Start Learning</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Chat Sessions Sidebar -->
+<div class="chat-sidebar" id="chat-sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-history"></i> Chat History</h3>
+        <button class="sidebar-close" onclick="toggleSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <button class="new-chat-btn" onclick="createNewSession()">
+        <i class="fas fa-plus"></i> New Chat
+    </button>
+
+    <div class="sessions-list" id="sessions-list">
+        <p class="sessions-loading">Loading...</p>
+    </div>
+</div>
+
+<div class="ai-tutor-container">
+    <!-- Floating Orbs -->
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+    <div class="floating-orb orb-3"></div>
+
+    <div class="container">
+        <!-- AI Tutor Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="ai-tutor-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Chat History">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <div>
+                                <h2 class="mb-1"><i class="fas fa-graduation-cap me-3"></i>SmartCampus AI Assistant</h2>
+                                <p class="mb-0">Your intelligent learning companion powered by advanced AI</p>
+                            </div>
+                        </div>
+                        <div class="text-end user-info">
+                            <h4 class="mb-0">{{ session.name }}</h4>
+                            <small>{{ session.role|title }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <!-- AI Avatar -->
+                <div class="ai-avatar-container">
+                    <div class="ai-avatar" id="ai-avatar">
+                        <div class="ai-avatar-ring"></div>
+                        <div class="ai-avatar-ring ai-avatar-ring-2"></div>
+                        <div class="ai-avatar-ring ai-avatar-ring-3"></div>
+                        <div class="ai-avatar-core">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome to SmartCampus AI!</h1>
+                    {% if session.role == 'teacher' %}
+                    <p class="welcome-subtitle">Hello {{ session.name }}! I'm here to support your teaching journey.
+                    </p>
+                    <p class="welcome-description">Ask me about teaching resources, class insights, and educational best
+                        practices!</p>
+                    {% elif session.role == 'admin' %}
+                    <p class="welcome-subtitle">Hello {{ session.name }}! I'm here to assist with administration.
+                    </p>
+                    <p class="welcome-description">Ask me about system insights, analytics, and institutional
+                        management!</p>
+                    {% else %}
+                    <p class="welcome-subtitle">Hello {{ session.name }}! I'm here to help you excel in your studies.
+                    </p>
+                    <p class="welcome-description">Ask me questions, explore concepts, and let's learn together!</p>
+                    {% endif %}
+                </div>
+
+                <!-- Sound Wave Indicator -->
+                <div class="sound-wave" id="sound-wave">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="controls">
+                    <button class="control-btn btn-voice" onclick="startListening()" id="voice-btn">
+                        <i class="fas fa-microphone"></i>
+                        <span>Voice Question</span>
+                    </button>
+                    <button class="control-btn btn-type" onclick="showTypingInterface()">
+                        <i class="fas fa-keyboard"></i>
+                        <span>Type Question</span>
+                    </button>
+                    <button class="control-btn btn-mute" onclick="toggleMute()" id="mute-btn">
+                        <i class="fas fa-volume-up"></i>
+                        <span>Mute</span>
+                    </button>
+                </div>
+
+                <!-- Typing Interface -->
+                <div id="typing-interface" class="typing-interface">
+                    <label for="question-input">Ask your question:</label>
+                    <input type="text" id="question-input" placeholder="Type your question here and press Enter..."
+                        onkeypress="handleKeyPress(event)">
+                    <div class="text-center">
+                        <button class="send-btn" onclick="sendTypedQuestion()">
+                            <i class="fas fa-paper-plane me-2"></i>Send Question
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Display Area -->
+                <div class="display-card">
+                    <button class="load-more-btn" id="load-more-btn" onclick="loadMoreHistory()" style="display: none;">
+                        <i class="fas fa-history"></i> Load More History
+                    </button>
+                    <div id="display-area">
+                        <p>Use any of the buttons above to ask a question or interact with me.</p>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <p><i class="fas fa-info-circle me-2"></i>Ask questions by voice, type them, or click buttons to
+                        interact with your SmartCampus AI Assistant.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Mascot -->
+<div class="mascot-container">
+    <div class="mascot" id="ai-mascot" onclick="mascotAction()">
+        <div class="mascot-pulse"></div>
+        <i class="fas fa-lightbulb"></i>
+    </div>
+</div>
+
+<!-- Hidden data attributes for JS -->
+<div id="ai-tutor-data" data-role="{{ session.role }}" data-name="{{ session.name }}">
+</div>
+
+<script>
+    let isListening = false;
+    let recognition;
+    let isSpeaking = false;
+    let isMuted = false;
+
+    // Initialize speech recognition if available
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('display-area').innerHTML = `<p class="text-primary listening-animation">You asked: ${transcript}</p>`;
+            sendQuestionToAI(transcript);
+        };
+
+        recognition.onend = function () {
+            isListening = false;
+            updateVoiceButton();
+        };
+
+        recognition.onerror = function (event) {
+            console.error('Speech recognition error', event.error);
+            document.getElementById('display-area').innerHTML = `<p class="text-danger">Error: ${event.error}</p>`;
+            isListening = false;
+            updateVoiceButton();
+        };
+    }
+
+    function updateVoiceButton() {
+        const btn = document.getElementById('voice-btn');
+        if (isListening) {
+            btn.innerHTML = '<i class="fas fa-microphone-slash"></i><span>Stop Listening</span>';
+            btn.style.background = 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)';
+        } else {
+            btn.innerHTML = '<i class="fas fa-microphone"></i><span>Voice Question</span>';
+            btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+    }
+
+    // AI Tutor Logic
+    const chatInput = document.getElementById('question-input'); // Renamed from 'chat-input' to match existing HTML
+    const sendBtn = document.querySelector('.send-btn'); // Selected by class, assuming it's the send button for typing
+    const displayArea = document.getElementById('display-area');
+    const mascot = document.getElementById('ai-mascot'); // Renamed from 'mascot' to match existing HTML
+    const soundWave = document.getElementById('sound-wave'); // Renamed from '.sound-wave' to match existing HTML
+    const aiAvatar = document.getElementById('ai-avatar'); // Renamed from '.ai-avatar' to match existing HTML
+
+    // Load chat history on startup
+    document.addEventListener('DOMContentLoaded', loadChatHistory);
+
+    function loadChatHistory() {
+        fetch('/ai_tutor/history')
+            .then(response => response.json())
+            .then(data => {
+                if (data.history && data.history.length > 0) {
+                    // Since the current UI is a "Display Area" style, let's just log that history is loaded
+                    // and maybe show the last interaction if available.
+                    const lastInteraction = data.history[data.history.length - 1];
+                    updateDisplay(lastInteraction.message, lastInteraction.response.answer); // Assuming response has an 'answer' field
+                }
+            })
+            .catch(err => console.error("Error loading history:", err));
+    }
+
+    // ===== Session Management =====
+    let currentSessionId = null;
+    let allSessions = [];
+
+    // Toggle Sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('chat-sidebar');
+        sidebar.classList.toggle('active');
+        if (sidebar.classList.contains('active')) {
+            loadSessions();
+        }
+    }
+
+    // Load All Sessions
+    function loadSessions() {
+        fetch('/ai_tutor/sessions')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allSessions = data.sessions;
+                    renderSessions();
+
+                    // If no session is selected and we have sessions, load the latest one
+                    if (!currentSessionId && allSessions.length > 0) {
+                        loadSession(allSessions[0].session_id);
+                    }
+                }
+            })
+            .catch(error => console.error('Error loading sessions:', error));
+    }
+
+    // Render Sessions in Sidebar
+    function renderSessions() {
+        const sessionsList = document.getElementById('sessions-list');
+        if (allSessions.length === 0) {
+            sessionsList.innerHTML = '<p class="sessions-loading">No chat history yet</p>';
+            return;
+        }
+
+        sessionsList.innerHTML = allSessions.map(session => `
+            <div class="session-item ${session.session_id === currentSessionId ? 'active' : ''}" 
+                 onclick="loadSession('${session.session_id}')">
+                <div class="session-title">${session.session_title}</div>
+                <div class="session-meta">
+                    <span>${session.message_count} messages</span>
+                    <span>${formatSessionTime(session.last_message_time)}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Format Session Timestamp
+    function formatSessionTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+
+        if (hours < 1) return 'Just now';
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+        return date.toLocaleDateString();
+    }
+
+    // Create New Session
+    function createNewSession() {
+        fetch('/ai_tutor/session/new', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentSessionId = data.session_id;
+                    // Clear display area
+                    document.getElementById('display-area').innerHTML = '<p>Start a new conversation!</p>';
+                    // Close sidebar
+                    document.getElementById('chat-sidebar').classList.remove('active');
+                    // Reload sessions
+                    loadSessions();
+                }
+            })
+            .catch(error => console.error('Error creating session:', error));
+    }
+
+    // Load Specific Session
+    function loadSession(sessionId) {
+        currentSessionId = sessionId;
+        // Close sidebar
+        document.getElementById('chat-sidebar').classList.remove('active');
+
+        // Load history for this session
+        fetch(`/ai_tutor/history?session_id=${sessionId}&limit=200`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const displayArea = document.getElementById('display-area');
+                    displayArea.innerHTML = '';
+
+                    data.history.forEach(item => {
+                        appendHistoryItem(item.message, item.response);
+                    });
+
+                    // Scroll to bottom
+                    displayArea.scrollTop = displayArea.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Error loading session:', error));
+
+        // Update UI
+        renderSessions();
+    }
+
+    // Modified enterTutor to integrate with new display logic and keep greeting
+    function enterTutor() {
+        // Hide the welcome overlay
+        document.getElementById('welcome-overlay').classList.add('hidden');
+
+        // Play the greeting after a short delay
+        setTimeout(() => {
+            speakGreeting();
+        }, 300);
+
+        // Mascot animation from the provided snippet
+        if (mascot) {
+            mascot.style.transform = 'scale(1.2) rotate(-10deg)';
+            setTimeout(() => {
+                mascot.style.transform = 'scale(1) rotate(0deg)';
+            }, 500);
+        }
+
+        // Load chat sessions and initial history
+        loadSessions();
+    }
+
+    let currentHistoryLimit = 50;
+
+    function loadChatHistory() {
+        console.log("Loading chat history...");
+        fetch(`/ai_tutor/history?limit=${currentHistoryLimit}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.history.length > 0) {
+                    const displayArea = document.getElementById('display-area');
+                    displayArea.innerHTML = '';
+
+                    data.history.forEach(item => {
+                        appendHistoryItem(item.message, item.response);
+                    });
+
+                    // Show "Load More" button if we have max messages
+                    if (data.history.length >= currentHistoryLimit && currentHistoryLimit < 200) {
+                        document.getElementById('load-more-btn').style.display = 'block';
+                    } else {
+                        document.getElementById('load-more-btn').style.display = 'none';
+                    }
+
+                    // Scroll to bottom
+                    displayArea.scrollTop = displayArea.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Error loading history:', error));
+    }
+
+    function loadMoreHistory() {
+        currentHistoryLimit += 50;
+        if (currentHistoryLimit > 200) {
+            currentHistoryLimit = 200;
+        }
+        loadChatHistory();
+    }
+
+    function appendHistoryItem(question, answer) {
+        const displayArea = document.getElementById('display-area');
+        const historyHTML = `
+            <div style="width: 100%; text-align: left; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <p class="text-primary" style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">YOU:</p>
+                <p style="font-size: 1.1rem; margin-bottom: 15px;">"${question}"</p>
+
+                <p class="text-success" style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">AI TUTOR:</p>
+                <div style="color: var(--text-secondary); line-height: 1.6;">${formatAnswer(answer)}</div>
+            </div>
+        `;
+        displayArea.insertAdjacentHTML('beforeend', historyHTML);
+    }
+
+    function updateDisplay(question, answer) {
+        appendHistoryItem(question, answer);
+        const displayArea = document.getElementById('display-area');
+        displayArea.scrollTop = displayArea.scrollHeight;
+    }
+
+    function formatAnswer(text) {
+        // Convert newlines to <br> for HTML display
+        return text.replace(/\n/g, '<br>');
+    }
+
+    // Re-assigning event listener for the send button
+    if (sendBtn) {
+        sendBtn.onclick = sendTypedQuestion; // Re-assigning to existing function
+    }
+    // Re-assigning event listener for keypress
+    if (chatInput) {
+        chatInput.onkeypress = handleKeyPress; // Re-assigning to existing function
+    }
+
+    // Original startListening function (kept)
+    function startListening() {
+        if (!recognition) {
+            document.getElementById('display-area').innerHTML = `<p class="text-danger">Speech recognition is not supported in your browser.</p>`;
+            return;
+        }
+
+        if (isListening) {
+            recognition.stop();
+            isListening = false;
+        } else {
+            recognition.start();
+            isListening = true;
+            document.getElementById('display-area').innerHTML = `<p class="text-primary listening-animation">🎤 Listening... Please speak your question.</p>`;
+        }
+        updateVoiceButton();
+    }
+
+    function sendQuestionToAI(question) {
+        document.getElementById('display-area').innerHTML = `<p class="text-primary listening-animation">⏳ Processing your question...</p>`;
+
+        // Add speaking class to avatar
+        if (aiAvatar) aiAvatar.classList.add('speaking');
+
+        fetch('/ai_tutor/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: question,
+                role: '{{ session.role }}',
+                session_id: currentSessionId
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Remove speaking class from avatar
+                if (aiAvatar) aiAvatar.classList.remove('speaking');
+
+                if (data.response) {
+                    const isNewSession = !currentSessionId && data.session_id;
+                    if (data.session_id) {
+                        currentSessionId = data.session_id;
+                    }
+
+                    updateDisplay(question, data.response.answer);
+
+                    if ('speechSynthesis' in window) {
+                        speakText(data.response.answer);
+                    }
+
+                    // If it was a new session, refresh the sidebar list to show the new title
+                    if (isNewSession) {
+                        loadSessions();
+                    }
+                } else if (data.error) {
+                    document.getElementById('display-area').innerHTML = `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    document.getElementById('display-area').innerHTML = `<p class="text-danger">Sorry, I could not process your request. Please try again.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Remove speaking class from avatar on error
+                if (aiAvatar) aiAvatar.classList.remove('speaking');
+                document.getElementById('display-area').innerHTML = `<p class="text-danger">An error occurred while processing your request. Please try again.</p>`;
+            });
+    }
+
+    function speakGreeting() {
+        const dataElement = document.getElementById('ai-tutor-data');
+        const userRole = dataElement.dataset.role;
+        const userName = dataElement.dataset.name;
+        let greeting = '';
+
+        if (userRole === 'teacher') {
+            greeting = `Hello ${userName}! I'm your SmartCampus AI Assistant. I'm here to help you with teaching resources, class management insights, and educational best practices. I can assist with lesson planning, student analytics, and academic support. How can I help you today?`;
+        } else if (userRole === 'admin') {
+            greeting = `Hello ${userName}! I'm your SmartCampus AI Assistant. I'm here to help you with administrative tasks, system insights, and institutional management. How can I assist you today?`;
+        } else {
+            greeting = `Hello ${userName}! I'm your SmartCampus AI Assistant. I'm here to help you with your studies. I can explain concepts, answer questions, and help you prepare for exams. How can I assist you today?`;
+        }
+
+        // Use updateDisplay for greeting as well, or keep separate if preferred
+        // For now, keeping it separate as it's a special initial message
+        document.getElementById('display-area').innerHTML = `<p class="text-success">${greeting}</p>`;
+
+        if ('speechSynthesis' in window) {
+            speakText(greeting);
+        }
+    }
+
+    function showTypingInterface() {
+        const typingInterface = document.getElementById('typing-interface');
+
+        if (typingInterface.classList.contains('show')) {
+            typingInterface.classList.remove('show');
+        } else {
+            typingInterface.classList.add('show');
+            document.getElementById('question-input').focus();
+        }
+    }
+
+    function sendTypedQuestion() {
+        const questionInput = document.getElementById('question-input');
+        const question = questionInput.value.trim();
+
+        if (!question) {
+            document.getElementById('display-area').innerHTML = '<p class="text-warning">⚠️ Please enter a question first.</p>';
+            return;
+        }
+
+        sendQuestionToAI(question);
+        questionInput.value = '';
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendTypedQuestion();
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('mute-btn');
+        const synth = window.speechSynthesis;
+
+        if (isMuted) {
+            // Muted state - PAUSE speech
+            btn.innerHTML = '<i class="fas fa-volume-mute"></i><span>Unmute</span>';
+            btn.style.background = 'linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)';
+
+            if (synth.speaking && !synth.paused) {
+                synth.pause();
+                // Visual indicators paused
+                document.getElementById('sound-wave').classList.remove('active');
+                document.getElementById('ai-avatar').classList.remove('speaking');
+            }
+        } else {
+            // Unmuted state - RESUME speech
+            btn.innerHTML = '<i class="fas fa-volume-up"></i><span>Mute</span>';
+            btn.style.background = 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)';
+
+            if (synth.paused) {
+                synth.resume();
+                // Visual indicators resumed
+                document.getElementById('sound-wave').classList.add('active');
+                document.getElementById('ai-avatar').classList.add('speaking');
+            }
+        }
+    }
+
+    function speakText(text) {
+        // If muted, we still queue it but it will be paused if we are in paused state
+        // OR we can just return if we don't want to queue. 
+        // User asked for "mute when speak... unmute recite continuity", implying pause/resume.
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Cancel any previous speech
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 0.8;
+
+            // Show sound wave and avatar speaking state
+            utterance.onstart = function () {
+                isSpeaking = true;
+                if (!isMuted) {
+                    document.getElementById('sound-wave').classList.add('active');
+                    document.getElementById('ai-avatar').classList.add('speaking');
+                }
+            };
+
+            utterance.onend = function () {
+                isSpeaking = false;
+                document.getElementById('sound-wave').classList.remove('active');
+                document.getElementById('ai-avatar').classList.remove('speaking');
+            };
+
+            utterance.onpause = function () {
+                document.getElementById('sound-wave').classList.remove('active');
+                document.getElementById('ai-avatar').classList.remove('speaking');
+            };
+
+            utterance.onresume = function () {
+                if (!isMuted) {
+                    document.getElementById('sound-wave').classList.add('active');
+                    document.getElementById('ai-avatar').classList.add('speaking');
+                }
+            };
+
+            // Get voices and select a good one
+            const setVoice = () => {
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    const preferredVoice = voices.find(voice =>
+                        voice.name.toLowerCase().includes('google') ||
+                        voice.name.toLowerCase().includes('zira') ||
+                        voice.name.toLowerCase().includes('samantha') ||
+                        voice.name.toLowerCase().includes('female')
+                    );
+                    utterance.voice = preferredVoice || voices[0];
+                }
+            };
+
+            if (window.speechSynthesis.getVoices().length > 0) {
+                setVoice();
+            } else {
+                window.speechSynthesis.onvoiceschanged = setVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+
+            // If already muted, immediately pause it
+            if (isMuted) {
+                window.speechSynthesis.pause();
+            }
+        }
+    }
+
+    function mascotAction() {
+        const mascot = document.getElementById('ai-mascot');
+        mascot.style.transform = 'scale(1.3) rotate(15deg)';
+        setTimeout(() => {
+            mascot.style.transform = '';
+        }, 300);
+
+        const tips = [
+            "💡 Did you know? Regular review sessions improve retention by up to 80%!",
+            "📚 Remember: The best way to learn is by teaching others!",
+            "⏰ Pro tip: Use the Pomodoro technique for effective study sessions!",
+            "🌟 Curiosity is the engine of achievement!",
+            "🚀 Every expert was once a beginner!",
+            "🧠 Your brain grows stronger with every new thing you learn!"
+        ];
+
+        const randomTip = tips[Math.floor(Math.random() * tips.length)];
+        document.getElementById('display-area').innerHTML = `<p class="text-info">${randomTip}</p>`;
+    }
+
+    // Function to enter the tutor and play greeting (triggered by user click)
+    function enterTutor() {
+        // Hide the welcome overlay
+        document.getElementById('welcome-overlay').classList.add('hidden');
+
+        // Play the greeting after a short delay
+        setTimeout(() => {
+            speakGreeting();
+        }, 300);
+    }
+</script>
+{% endblock %}
