@@ -284,8 +284,46 @@
         }
     }
 
+    function autoCalculateSemester() {
+        const batchSelect = document.getElementById('batch');
+        const semesterSelect = document.getElementById('semester');
+        const role = document.getElementById('role').value;
+
+        if (role !== 'student' || !batchSelect.value) return;
+
+        // Formula: sem = (currentYear - startYear) * 2 + (isSecondHalf ? 1 : 0)
+        // Adjust for March 2026 context (Jan-Jun = Even, Jul-Dec = Odd)
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // 1-indexed
+
+        const startYearStr = batchSelect.value.split('-')[0];
+        const startYear = parseInt(startYearStr);
+
+        if (isNaN(startYear)) return;
+
+        let sem = (currentYear - startYear) * 2;
+        if (currentMonth >= 7) {
+            sem += 1; // July starts the new academic year's odd semester
+        }
+
+        // Clamp to 1-8
+        sem = Math.max(1, Math.min(8, sem));
+        
+        // Match the semester value string "Semester X"
+        const targetValue = `Semester ${sem}`;
+        
+        // Only auto-update if it's currently empty or the user just changed the batch
+        semesterSelect.value = targetValue;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         toggleFields();
+        
+        const batchSelect = document.getElementById('batch');
+        if (batchSelect) {
+            batchSelect.addEventListener('change', autoCalculateSemester);
+        }
     });
 </script>
 {% endblock %}

@@ -472,6 +472,10 @@
                             <div class="col-4 text-muted">Email:</div>
                             <div class="col-8 fw-bold" id="modalUserEmail"></div>
                         </div>
+                        <div class="row mb-2" id="generatedPasswordRow" style="display: none;">
+                            <div class="col-4 text-muted">Gen Password:</div>
+                            <div class="col-8 fw-bold text-success" id="modalUserGenPassword"></div>
+                        </div>
                         <div class="row mb-2">
                             <div class="col-4 text-muted">Password:</div>
                             <div class="col-8">
@@ -506,6 +510,15 @@
                             <div class="row mb-2">
                                 <div class="col-4 text-muted">Face Reg:</div>
                                 <div class="col-8 fw-bold" id="modalUserFaceStatus"></div>
+                            </div>
+                            <!-- Parent Details -->
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Parent Name:</div>
+                                <div class="col-8 fw-bold" id="modalUserParentName"></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-4 text-muted">Parent Phone:</div>
+                                <div class="col-8 fw-bold" id="modalUserParentPhone"></div>
                             </div>
                         </div>
                     </div>
@@ -597,6 +610,15 @@
                             document.getElementById('modalUserRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
                         }
 
+                        // Display generated password if available
+                        const genPasswordRow = document.getElementById('generatedPasswordRow');
+                        if (user.temporary_password) {
+                            document.getElementById('modalUserGenPassword').textContent = user.temporary_password;
+                            genPasswordRow.style.display = 'flex';
+                        } else {
+                            genPasswordRow.style.display = 'none';
+                        }
+
                         document.getElementById('modalEditLink').href = `/admin/edit_user/${user.user_id}`;
 
                         // Image handling
@@ -641,6 +663,8 @@
                                 studentFields.style.display = 'block';
                                 document.getElementById('modalUserDept').textContent = user.department || 'N/A';
                                 document.getElementById('modalUserBatch').textContent = user.batch || 'N/A';
+                                document.getElementById('modalUserParentName').textContent = user.parent_name || 'N/A';
+                                document.getElementById('modalUserParentPhone').textContent = user.parent_phone || 'N/A';
                             } else {
                                 studentFields.style.display = 'none';
                             }

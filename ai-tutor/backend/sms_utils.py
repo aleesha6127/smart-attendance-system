@@ -1,12 +1,13 @@
 import os
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
 
 def send_credentials_sms(phone_number, user_id, password, role="user"):
     """
-    Sends an SMS using Twilio (if configured), falls back to Textbelt (1 free/day),
-    and finally falls back to a local simulation file to prevent UI errors.
+    Sends an SMS using Twilio.
     """
+    load_dotenv(override=True)
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     twilio_number = os.environ.get('TWILIO_PHONE_NUMBER')
@@ -20,7 +21,7 @@ def send_credentials_sms(phone_number, user_id, password, role="user"):
 
     message_body = f"AI Tutor: {role.title()} approved.\nID: {user_id}\nPass: {password}"
     
-    # --- 1. Try Twilio if configured ---
+    # --- Try Twilio FIRST ---
     if all([account_sid, auth_token, twilio_number]):
         try:
             from twilio.rest import Client
@@ -33,11 +34,16 @@ def send_credentials_sms(phone_number, user_id, password, role="user"):
             )
             print(f"[SMS] Sent via Twilio to {formatted_number}. SID: {message.sid}")
             return True, "SMS sent successfully via Twilio."
-        except Exception as e:
-            print(f"[SMS Error] Twilio Failed: {e}")
+        except TwilioRestException as e:
+            print(f"[SMS Error] Twilio Failed: {e.msg if hasattr(e, 'msg') else str(e)}")
             # Fall through to next method
+        except Exception as e:
+            print(f"[SMS Error] Unknown Error: {str(e)}")
+            # Fall through to next method
+    else:
+        print("[SMS Warning] Missing Twilio credentials or old credentials in cache. Falling back.")
 
-    # --- 2. Try Textbelt (Free Zero-Config API, 1 per day) ---
+    # --- Fallback 1. Try Textbelt (Free Zero-Config API, 1 per day) ---
     try:
         resp = requests.post('https://textbelt.com/text', {
             'phone': formatted_number,
@@ -54,7 +60,7 @@ def send_credentials_sms(phone_number, user_id, password, role="user"):
     except Exception as e:
         print(f"[SMS Error] Textbelt API request failed: {e}")
 
-    # --- 3. Fallback: Local File Simulation ---
+    # --- Fallback 2. Local File Simulation ---
     try:
         os.makedirs("dataset", exist_ok=True)
         log_file = "dataset/sms_simulation_log.txt"

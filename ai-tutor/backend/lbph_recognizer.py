@@ -15,11 +15,11 @@ class LBPHFaceRecognizer:
         
         # Create LBPH face recognizer
         self.recognizer = cv2.face.LBPHFaceRecognizer_create(
-            radius=2,        # Radius for LBP
-            neighbors=8,     # Number of neighbors
-            grid_x=8,        # Grid divisions X
-            grid_y=8,        # Grid divisions Y
-            threshold=100    # Confidence threshold (lower = stricter)
+            radius=2,
+            neighbors=8,
+            grid_x=8,
+            grid_y=8,
+            threshold=70    # Stricter threshold to prevent misidentification
         )
         
         # Label mapping: id -> name
@@ -93,6 +93,10 @@ class LBPHFaceRecognizer:
                                 continue
                             
                             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                            
+                            # Apply CLAHE to improve training quality (must match recognition preprocessing)
+                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                            gray = clahe.apply(gray)
                             
                             # Detect face in registration image
                             detected_faces = self.face_cascade.detectMultiScale(gray, 1.1, 5, minSize=(50, 50))
@@ -178,6 +182,11 @@ class LBPHFaceRecognizer:
                                 continue
                             
                             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                            
+                            # Apply CLAHE for teachers too
+                            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                            gray = clahe.apply(gray)
+                            
                             detected_faces = self.face_cascade.detectMultiScale(gray, 1.1, 5, minSize=(50, 50))
                             
                             if len(detected_faces) > 0:

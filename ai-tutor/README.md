@@ -1,5 +1,10 @@
 # AI-Based Smart Attendance & Learning System
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-brightgreen?style=for-the-badge&logo=render)](https://smart-attendance-system.onrender.com)
+[![GitHub](https://img.shields.io/badge/GitHub-aleesha6127-blue?style=for-the-badge&logo=github)](https://github.com/aleesha6127/smart-attendance-system)
+
+> 🎥 **[Try the Live Webcam Demo →](https://smart-attendance-system.onrender.com/demo)**
+
 A comprehensive attendance and learning management system using Python, Flask, face recognition, and AI-powered tutoring.
 
 ## 🚀 Features
@@ -33,7 +38,7 @@ A comprehensive attendance and learning management system using Python, Flask, f
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/aleesha6127/smart-attendance-system.git
 cd ai-tutor
 ```
 

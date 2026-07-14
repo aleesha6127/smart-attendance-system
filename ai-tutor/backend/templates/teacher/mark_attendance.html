@@ -161,7 +161,7 @@
                         <div class="col-md-3">
                             <label for="date" class="form-label">Date</label>
                             <input type="date" class="form-control" id="date" name="date" value="{{ today_date or '' }}"
-                                required>
+                                max="{{ today_date }}" required>
                         </div>
                         <div class="col-md-3">
                             <label for="period" class="form-label">Period</label>
@@ -219,6 +219,7 @@
                             <input type="hidden" name="period" id="form-period" value="">
                             <input type="hidden" name="department" id="form-department" value="">
                             <input type="hidden" name="batch" id="form-batch" value="">
+                            <input type="hidden" name="original_period" id="form-original-period" value="">
 
                             <div class="table-responsive">
                                 <table class="table table-hover">
@@ -287,18 +288,38 @@
             return;
         }
 
+        // Validate date is not in the future
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate > today) {
+            alert('Cannot mark attendance for future dates.');
+            return;
+        }
+
         // Update hidden form fields
         document.getElementById('form-date').value = date;
         document.getElementById('form-period').value = period;
         document.getElementById('form-department').value = department;
         document.getElementById('form-batch').value = batch;
+        document.getElementById('form-original-period').value = period; // Store the period used for loading
 
         // Update section header
         document.getElementById('selected-department').textContent = department;
         document.getElementById('selected-batch').textContent = batch;
 
+        // Clear any previous warnings
+        const warningDiv = document.getElementById('duplicate-warning');
+        if (warningDiv) warningDiv.remove();
+
+        const submitBtn = document.querySelector('#attendance-form button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-success');
+        submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Submit Attendance';
+
         // Make AJAX request to get students
-        fetch(`/api/get_students_by_dept_batch?department=${encodeURIComponent(department)}&batch=${encodeURIComponent(batch)}`, {
+        fetch(`/api/get_students_by_dept_batch?department=${encodeURIComponent(department)}&batch=${encodeURIComponent(batch)}&date=${encodeURIComponent(date)}&period=${encodeURIComponent(period)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -314,28 +335,67 @@
                 const tbody = document.getElementById('students-table-body');
                 tbody.innerHTML = '';
 
+                let markedByOther = null;
+                let markedBySelf = false;
+
                 if (students.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="4" class="text-center">No students found in this department and batch</td></tr>';
                 } else {
                     students.forEach(student => {
+                        const status = student.status || 'absent';
+                        const isMarked = !!student.marked_by;
+                        
+                        // Check if marked by someone else
+                        if (isMarked && student.marked_by !== '{{ session.user_id }}') {
+                            markedByOther = student.marked_by_name || student.marked_by;
+                        } else if (isMarked) {
+                            markedBySelf = true;
+                        }
+
                         const row = document.createElement('tr');
                         row.innerHTML = `
                         <td>${student.user_id}</td>
                         <td>${student.name}</td>
                         <td>
-                            <span class="badge bg-secondary" id="status-badge-${student.user_id}">Not Marked</span>
+                            <span class="badge ${isMarked ? getBadgeClass(status) : 'bg-secondary'}" id="status-badge-${student.user_id}">
+                                ${isMarked ? status.charAt(0).toUpperCase() + status.slice(1) : 'Not Marked'}
+                            </span>
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-present attendance-btn" onclick="setAttendance('${student.user_id}', 'present')">Present</button>
-                                <button type="button" class="btn btn-sm btn-late attendance-btn" onclick="setAttendance('${student.user_id}', 'late')">Late</button>
-                                <button type="button" class="btn btn-sm btn-absent attendance-btn" onclick="setAttendance('${student.user_id}', 'absent')">Absent</button>
+                                <button type="button" class="btn btn-sm btn-present attendance-btn ${status === 'present' && isMarked ? 'active' : ''}" onclick="setAttendance('${student.user_id}', 'present')">Present</button>
+                                <button type="button" class="btn btn-sm btn-late attendance-btn ${status === 'late' && isMarked ? 'active' : ''}" onclick="setAttendance('${student.user_id}', 'late')">Late</button>
+                                <button type="button" class="btn btn-sm btn-absent attendance-btn ${status === 'absent' && isMarked ? 'active' : ''}" onclick="setAttendance('${student.user_id}', 'absent')">Absent</button>
                             </div>
-                            <input type="hidden" name="status_${student.user_id}" id="status-input-${student.user_id}" value="absent">
+                            <input type="hidden" name="status_${student.user_id}" id="status-input-${student.user_id}" value="${status}">
                         </td>
                     `;
                         tbody.appendChild(row);
                     });
+                }
+
+                // Show warnings/info
+                const studentsSection = document.getElementById('students-section');
+                if (markedByOther) {
+                    const alert = document.createElement('div');
+                    alert.id = 'duplicate-warning';
+                    alert.className = 'alert alert-danger mt-3';
+                    alert.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i><strong>Warning:</strong> Attendance for this class has already been marked by <b>${markedByOther}</b>. You cannot overwrite these records.`;
+                    studentsSection.insertBefore(alert, studentsSection.firstChild);
+                    
+                    // Disable submit button
+                    submitBtn.disabled = true;
+                    submitBtn.classList.remove('btn-success');
+                    submitBtn.classList.add('btn-secondary');
+                    submitBtn.innerHTML = '<i class="fas fa-ban me-2"></i>Attendance Already Marked';
+                } else if (markedBySelf) {
+                    const alert = document.createElement('div');
+                    alert.id = 'duplicate-warning';
+                    alert.className = 'alert alert-info mt-3';
+                    alert.innerHTML = `<i class="fas fa-info-circle me-2"></i>You are currently editing attendance that you previously marked for this class.`;
+                    studentsSection.insertBefore(alert, studentsSection.firstChild);
+                    
+                    submitBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Update Attendance';
                 }
 
                 // Show the students section
@@ -347,6 +407,13 @@
                 // Hide the students section if there was an error
                 document.getElementById('students-section').style.display = 'none';
             });
+    }
+
+    function getBadgeClass(status) {
+        if (status === 'present') return 'bg-success';
+        if (status === 'absent') return 'bg-danger';
+        if (status === 'late') return 'bg-warning';
+        return 'bg-secondary';
     }
 
     function setAttendance(studentId, status) {

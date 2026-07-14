@@ -766,8 +766,8 @@
         try {
             // Create canvas to capture frame
             const canvas = document.createElement('canvas');
-            canvas.width = 320;  // Reduced resolution for faster processing
-            canvas.height = 240;
+            canvas.width = 640;  // Increased resolution for better face recognition
+            canvas.height = 480;
             const ctx = canvas.getContext('2d');
 
             // Draw video frame to canvas

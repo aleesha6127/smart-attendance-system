@@ -685,6 +685,39 @@
         left: 0;
     }
 
+    .session-item {
+        position: relative;
+        padding: 15px 45px 15px 15px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .session-item:hover {
+        background: rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .session-item.active {
+        background: rgba(102, 126, 234, 0.3);
+        border-color: rgba(102, 126, 234, 0.7);
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+    }
+
+    .delete-session {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        padding: 5px;
+        z-index: 2;
+    }
+
     .sidebar-header {
         padding: 20px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1041,8 +1074,12 @@
                         <span>Type Question</span>
                     </button>
                     <button class="control-btn btn-mute" onclick="toggleMute()" id="mute-btn">
-                        <i class="fas fa-volume-up"></i>
-                        <span>Mute</span>
+                        <i class="fas fa-pause"></i>
+                        <span>Pause</span>
+                    </button>
+                    <button class="control-btn" onclick="stopReading()" id="stop-btn" style="display: none; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);">
+                        <i class="fas fa-stop-circle"></i>
+                        <span>Stop Reading</span>
                     </button>
                 </div>
 
@@ -1140,24 +1177,12 @@
     const displayArea = document.getElementById('display-area');
     const mascot = document.getElementById('ai-mascot'); // Renamed from 'mascot' to match existing HTML
     const soundWave = document.getElementById('sound-wave'); // Renamed from '.sound-wave' to match existing HTML
-    const aiAvatar = document.getElementById('ai-avatar'); // Renamed from '.ai-avatar' to match existing HTML
+    const aiAvatar = document.getElementById('ai-avatar'); 
 
-    // Load chat history on startup
-    document.addEventListener('DOMContentLoaded', loadChatHistory);
-
-    function loadChatHistory() {
-        fetch('/ai_tutor/history')
-            .then(response => response.json())
-            .then(data => {
-                if (data.history && data.history.length > 0) {
-                    // Since the current UI is a "Display Area" style, let's just log that history is loaded
-                    // and maybe show the last interaction if available.
-                    const lastInteraction = data.history[data.history.length - 1];
-                    updateDisplay(lastInteraction.message, lastInteraction.response.answer); // Assuming response has an 'answer' field
-                }
-            })
-            .catch(err => console.error("Error loading history:", err));
-    }
+    // Load everything on startup
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSessions(); // This now handles initial history load of latest session
+    });
 
     // ===== Session Management =====
     let currentSessionId = null;
@@ -1206,8 +1231,28 @@
                     <span>${session.message_count} messages</span>
                     <span>${formatSessionTime(session.last_message_time)}</span>
                 </div>
+                <div class="delete-session" onclick="event.stopPropagation(); confirmDeleteSession('${session.session_id}')" title="Delete Session">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
             </div>
         `).join('');
+    }
+
+    function confirmDeleteSession(sessionId) {
+        if (confirm("Are you sure you want to delete this chat session?")) {
+            fetch(`/ai_tutor/session/${sessionId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (currentSessionId === sessionId) {
+                            currentSessionId = null;
+                            document.getElementById('display-area').innerHTML = '<p>Session deleted. Start a new chat!</p>';
+                        }
+                        loadSessions();
+                    }
+                })
+                .catch(error => console.error('Error deleting session:', error));
+        }
     }
 
     // Format Session Timestamp
@@ -1294,50 +1339,35 @@
 
     let currentHistoryLimit = 50;
 
-    function loadChatHistory() {
-        console.log("Loading chat history...");
-        fetch(`/ai_tutor/history?limit=${currentHistoryLimit}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.history.length > 0) {
-                    const displayArea = document.getElementById('display-area');
-                    displayArea.innerHTML = '';
-
-                    data.history.forEach(item => {
-                        appendHistoryItem(item.message, item.response);
-                    });
-
-                    // Show "Load More" button if we have max messages
-                    if (data.history.length >= currentHistoryLimit && currentHistoryLimit < 200) {
-                        document.getElementById('load-more-btn').style.display = 'block';
-                    } else {
-                        document.getElementById('load-more-btn').style.display = 'none';
-                    }
-
-                    // Scroll to bottom
-                    displayArea.scrollTop = displayArea.scrollHeight;
-                }
-            })
-            .catch(error => console.error('Error loading history:', error));
-    }
-
     function loadMoreHistory() {
         currentHistoryLimit += 50;
         if (currentHistoryLimit > 200) {
             currentHistoryLimit = 200;
         }
-        loadChatHistory();
+        if (currentSessionId) {
+            loadSession(currentSessionId);
+        }
     }
 
     function appendHistoryItem(question, answer) {
         const displayArea = document.getElementById('display-area');
         const historyHTML = `
-            <div style="width: 100%; text-align: left; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                <p class="text-primary" style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">YOU:</p>
-                <p style="font-size: 1.1rem; margin-bottom: 15px;">"${question}"</p>
+            <div class="chat-interaction" style="width: 100%; text-align: left; margin-bottom: 25px; animation: fadeIn 0.4s ease;">
+                <!-- User Message -->
+                <div class="user-bubble" style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 15px; border-radius: 0 15px 15px 0; margin-bottom: 15px;">
+                    <p class="text-primary" style="font-weight: 700; font-size: 0.8em; text-transform: uppercase, letter-spacing: 1px; margin-bottom: 8px;">
+                        <i class="fas fa-user-circle me-2"></i>You
+                    </p>
+                    <p style="font-size: 1.05rem; color: #fff; margin: 0; line-height: 1.5;">${question}</p>
+                </div>
 
-                <p class="text-success" style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">AI TUTOR:</p>
-                <div style="color: var(--text-secondary); line-height: 1.6;">${formatAnswer(answer)}</div>
+                <!-- AI Response -->
+                <div class="ai-bubble" style="padding: 10px 0 10px 15px;">
+                    <p class="text-success" style="font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                        <i class="fas fa-robot me-2"></i>AI Tutor
+                    </p>
+                    <div style="color: var(--text-secondary); line-height: 1.7; font-size: 1.1rem;">${formatAnswer(answer)}</div>
+                </div>
             </div>
         `;
         displayArea.insertAdjacentHTML('beforeend', historyHTML);
@@ -1493,8 +1523,8 @@
 
         if (isMuted) {
             // Muted state - PAUSE speech
-            btn.innerHTML = '<i class="fas fa-volume-mute"></i><span>Unmute</span>';
-            btn.style.background = 'linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%)';
+            btn.innerHTML = '<i class="fas fa-play"></i><span>Resume</span>';
+            btn.style.background = 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)';
 
             if (synth.speaking && !synth.paused) {
                 synth.pause();
@@ -1504,7 +1534,7 @@
             }
         } else {
             // Unmuted state - RESUME speech
-            btn.innerHTML = '<i class="fas fa-volume-up"></i><span>Mute</span>';
+            btn.innerHTML = '<i class="fas fa-pause"></i><span>Pause</span>';
             btn.style.background = 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)';
 
             if (synth.paused) {
@@ -1513,6 +1543,24 @@
                 document.getElementById('sound-wave').classList.add('active');
                 document.getElementById('ai-avatar').classList.add('speaking');
             }
+        }
+    }
+
+    function stopReading() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            isMuted = false;
+            
+            // Reset UI
+            document.getElementById('sound-wave').classList.remove('active');
+            document.getElementById('ai-avatar').classList.remove('speaking');
+            document.getElementById('stop-btn').style.display = 'none';
+            
+            // Reset Mute/Pause button
+            const muteBtn = document.getElementById('mute-btn');
+            muteBtn.innerHTML = '<i class="fas fa-pause"></i><span>Pause</span>';
+            muteBtn.style.background = 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)';
         }
     }
 
@@ -1532,6 +1580,7 @@
             // Show sound wave and avatar speaking state
             utterance.onstart = function () {
                 isSpeaking = true;
+                document.getElementById('stop-btn').style.display = 'flex';
                 if (!isMuted) {
                     document.getElementById('sound-wave').classList.add('active');
                     document.getElementById('ai-avatar').classList.add('speaking');
@@ -1540,6 +1589,7 @@
 
             utterance.onend = function () {
                 isSpeaking = false;
+                document.getElementById('stop-btn').style.display = 'none';
                 document.getElementById('sound-wave').classList.remove('active');
                 document.getElementById('ai-avatar').classList.remove('speaking');
             };

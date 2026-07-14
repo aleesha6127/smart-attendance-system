@@ -1,0 +1,208 @@
+{% extends 'base_public.html' %}
+
+{% block title %}Live Web Demo - AI Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center mb-5">
+            <h1 class="display-4 fw-bold mb-3"><i class="fas fa-camera text-primary me-2"></i>Live Attendance Demo</h1>
+            <p class="lead text-muted">Test our face recognition attendance system directly from your browser. Ensure you have registered your face first.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-video me-2"></i>Webcam Feed</h5>
+                    <div id="status-indicator" class="badge bg-secondary">
+                        <i class="fas fa-circle-notch fa-spin me-1"></i>Initializing...
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 position-relative bg-light">
+                    <!-- Webcam Container -->
+                    <div class="webcam-wrapper" style="height: 480px; width: 100%; display: flex; justify-content: center; align-items: center; background-color: #000;">
+                        <video id="webcam" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                    </div>
+
+                    <!-- Overlay for Results -->
+                    <div id="results-overlay" class="position-absolute bottom-0 w-100 p-3" style="background: rgba(0, 0, 0, 0.7); display: none;">
+                        <h4 class="text-white mb-2">Recognition Results:</h4>
+                        <div id="recognition-results" class="d-flex flex-wrap gap-2">
+                            <!-- Results will be injected here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Overlay for Errors -->
+                    <div id="error-overlay" class="position-absolute top-50 start-50 translate-middle w-100 text-center p-4" style="display: none; background: rgba(0,0,0,0.8);">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4 class="text-white">Camera Error</h4>
+                        <p class="text-white-50 mb-0" id="error-message">Could not access the webcam.</p>
+                        <button class="btn btn-primary mt-3" onclick="initCamera()">Try Again</button>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-dark fw-bold">How it works</h6>
+                            <p class="text-muted small mb-0">The system captures a frame every 1.5 seconds and sends it to the server securely.</p>
+                        </div>
+                        <div>
+                            <button id="toggle-btn" class="btn btn-outline-danger px-4 rounded-pill fw-bold" onclick="toggleRecognition()">
+                                <i class="fas fa-stop-circle me-2"></i>Stop Demo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const statusIndicator = document.getElementById('status-indicator');
+    const resultsOverlay = document.getElementById('results-overlay');
+    const recognitionResults = document.getElementById('recognition-results');
+    const errorOverlay = document.getElementById('error-overlay');
+    const toggleBtn = document.getElementById('toggle-btn');
+    
+    let stream = null;
+    let recognitionInterval = null;
+    let isRunning = false;
+
+    // Initialize Camera
+    async function initCamera() {
+        errorOverlay.style.display = 'none';
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+            video.srcObject = stream;
+            
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                startRecognition();
+            };
+        } catch (err) {
+            console.error('Camera access error:', err);
+            statusIndicator.className = 'badge bg-danger';
+            statusIndicator.innerHTML = '<i class="fas fa-times-circle me-1"></i>Camera Denied';
+            errorOverlay.style.display = 'block';
+            document.getElementById('error-message').textContent = err.message || 'Please allow camera access to use the demo.';
+        }
+    }
+
+    function startRecognition() {
+        if (isRunning) return;
+        isRunning = true;
+        
+        statusIndicator.className = 'badge bg-success';
+        statusIndicator.innerHTML = '<i class="fas fa-circle me-1 text-white animation-pulse"></i>Live Tracking';
+        
+        toggleBtn.className = 'btn btn-outline-danger px-4 rounded-pill fw-bold';
+        toggleBtn.innerHTML = '<i class="fas fa-stop-circle me-2"></i>Stop Demo';
+        
+        // Capture frame every 1.5 seconds
+        recognitionInterval = setInterval(captureAndSend, 1500);
+    }
+
+    function stopRecognition() {
+        if (!isRunning) return;
+        isRunning = false;
+        
+        if (recognitionInterval) {
+            clearInterval(recognitionInterval);
+        }
+        
+        statusIndicator.className = 'badge bg-secondary';
+        statusIndicator.innerHTML = '<i class="fas fa-pause-circle me-1"></i>Paused';
+        
+        toggleBtn.className = 'btn btn-outline-success px-4 rounded-pill fw-bold';
+        toggleBtn.innerHTML = '<i class="fas fa-play-circle me-2"></i>Resume Demo';
+        resultsOverlay.style.display = 'none';
+    }
+
+    function toggleRecognition() {
+        if (isRunning) {
+            stopRecognition();
+        } else {
+            startRecognition();
+        }
+    }
+
+    async function captureAndSend() {
+        if (!isRunning || video.readyState !== 4) return;
+        
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to base64 JPEG
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        try {
+            const response = await fetch('/recognize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image_data: imageData })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.results && data.results.length > 0) {
+                // Show results
+                resultsOverlay.style.display = 'block';
+                recognitionResults.innerHTML = '';
+                
+                data.results.forEach(result => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-success text-white px-3 py-2 rounded-pill fw-bold d-flex align-items-center shadow-sm';
+                    el.innerHTML = `<i class="fas fa-user-check me-2"></i> ${result.name} <span class="ms-2 badge bg-light text-success">${result.status}</span>`;
+                    recognitionResults.appendChild(el);
+                });
+                
+                // Add a subtle flash effect to video to indicate success
+                video.style.opacity = '0.5';
+                setTimeout(() => { video.style.opacity = '1'; }, 200);
+            } else {
+                // Hide results if no one recognized
+                resultsOverlay.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error during recognition POST:', error);
+        }
+    }
+
+    // Start on load
+    document.addEventListener('DOMContentLoaded', initCamera);
+    
+    // Cleanup on page leave
+    window.addEventListener('beforeunload', () => {
+        stopRecognition();
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+
+<style>
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    .animation-pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+{% endblock %}

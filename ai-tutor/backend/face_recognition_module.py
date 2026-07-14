@@ -337,212 +337,121 @@ class FaceRecognition:
         if not face_locations:
             return False, "No face detected (checked with CLAHE+Relaxed Params)", None
             
-        # Select the largest face ROI
-        best_face_idx = 0
-        if len(face_locations) > 1:
-            max_area = 0
-            for i, (top, right, bottom, left) in enumerate(face_locations):
-                area = (bottom - top) * (right - left)
-                if area > max_area:
-                    max_area = area
-                    best_face_idx = i
-            print(f"[register_face] Isolating largest face (idx {best_face_idx}) out of {len(face_locations)} detected")
+        # Extract features for ALL detected faces
+        print(f"[register_face] Checking {len(face_locations)} faces detected in registration image.")
+        all_face_encodings = []
+        all_face_rois = []
+        
+        for idx, (top, right, bottom, left) in enumerate(face_locations):
+            h, w, _ = image.shape
+            new_top, new_bottom = max(0, top), min(h, bottom)
+            new_left, new_right = max(0, left), min(w, right)
+            
+            isolated_face_image = image[new_top:new_bottom, new_left:new_right]
+            
+            face_encoding = None
+            try:
+                if self.face_recognition_available:
+                    face_encodings = face_recognition.face_encodings(rgb_image, [(top, right, bottom, left)])
+                    if face_encodings:
+                        face_encoding = face_encodings[0]
+                
+                if face_encoding is None:
+                    face_encoding = self.encode_face(isolated_face_image)
+            except Exception as e:
+                print(f"[register_face] Direct encoding failed: {e}, falling back to crop")
+                face_encoding = self.encode_face(isolated_face_image)
+            
+            if face_encoding is not None:
+                all_face_encodings.append(face_encoding)
+                all_face_rois.append(isolated_face_image)
+                
+        if not all_face_encodings:
+            return False, "Could not extract features from the detected faces", None
+
+        # --- CHECK DUPLICATES ON ALL FACES FOUND ---
+        if not bypass_duplicate_check:
+            for check_encoding in all_face_encodings:
+                for existing_idx, known_encoding in enumerate(self.known_face_encodings):
+                    if known_encoding is None or len(known_encoding) == 0: continue
+                    import numpy as np
+                    
+                    if self.face_recognition_available:
+                        try:
+                            import face_recognition
+                            dist = face_recognition.face_distance([known_encoding], check_encoding)[0]
+                            if dist < 0.65:
+                                existing_user = self.known_face_names[existing_idx]
+                                if existing_user and existing_user != user_id:
+                                    role = 'student' if existing_user.startswith('student') else 'teacher' if existing_user.startswith('teacher') else 'user'
+                                    return False, f"Registration failed. Face already registered to {role} '{existing_user}'. The person cannot be registered again.", existing_user
+                        except Exception as e:
+                            pass
+                    else:
+                        if check_encoding.shape == known_encoding.shape:
+                            dot_product = np.dot(check_encoding, known_encoding)
+                            norm_product = np.linalg.norm(check_encoding) * np.linalg.norm(known_encoding)
+                            if norm_product != 0:
+                                sim = dot_product / norm_product
+                                if sim > 0.80:
+                                    existing_user = self.known_face_names[existing_idx]
+                                    if existing_user and existing_user != user_id:
+                                        role = 'student' if existing_user.startswith('student') else 'teacher' if existing_user.startswith('teacher') else 'user'
+                                        return False, f"Registration failed. Face already registered to {role} '{existing_user}'. The person cannot be registered again.", existing_user
+
+        # Reject if multiple people are in the frame and none match known users
+        if len(all_face_encodings) > 1:
+            return False, "Multiple faces detected. Please ensure only the person being registered is in the frame.", None
+
+        # Proceed to register the single valid face
+        face_encoding = all_face_encodings[0]
+        isolated_face_image = all_face_rois[0]
         
         # --- QUALITY CHECK ---
-        quality_score, issues = self.assess_face_quality(image, face_locations[best_face_idx])
+        quality_score, issues = self.assess_face_quality(image, face_locations[0])
         print(f"[register_face] Quality Score: {quality_score}, Issues: {issues}")
         
-        if quality_score < 60: # Threshold for registration
+        if quality_score < 60:
              return False, f"Image quality too low ({quality_score}%). Issues: {', '.join(issues)}. Please try again with better lighting.", None
-
-        # Crop image to the isolated face with some margin (20%)
-        # TIGHT CROP to exclude abaya/hijab/background
-        # We strictly use the detected face region without expansion
-        # In fact, we might want to shrink slightly to be safe, but 0 margin is a good start
-        top, right, bottom, left = face_locations[best_face_idx]
-        h, w, _ = image.shape
-        
-        # margin_h = int((bottom - top) * 0.0) # 0% margin
-        # margin_w = int((right - left) * 0.0)
-        
-        new_top = max(0, top)
-        new_bottom = min(h, bottom)
-        new_left = max(0, left)
-        new_right = min(w, right)
-        
-        isolated_face_image = image[new_top:new_bottom, new_left:new_right]
-        face_rois = [isolated_face_image] # Store for augmentation if needed
-        
-        # Now perform encoding on the isolated face area
-        # We use the ORIGINAL RGB image with the FOUND location to get the highest quality encoding
-        face_encoding = None
-        try:
-            # We must use the original location list
-            if self.face_recognition_available:
-                face_encodings = face_recognition.face_encodings(rgb_image, [face_locations[best_face_idx]])
-                if face_encodings:
-                    face_encoding = face_encodings[0]
-            
-            if face_encoding is None:
-                # Absolute fallback: try encoding the cropped image
-                face_encoding = self.encode_face(isolated_face_image)
-        except Exception as e:
-            print(f"[register_face] Direct encoding failed: {e}, falling back to crop")
-            face_encoding = self.encode_face(isolated_face_image)
-        
-        if face_encoding is None:
-            return False, "Could not extract features from the detected face", None
-        
+             
         # Reload encodings if needed
         if len(self.known_face_encodings) != len(self.known_face_names):
             self.load_encodings()
 
-        # Remove previous data for this user to keep it clean (and avoid self-duplicate)
+        # Remove previous data for this user to keep it clean
         current_indices = [i for i, name in enumerate(self.known_face_names) if name == user_id]
         for index in sorted(current_indices, reverse=True):
             self.known_face_names.pop(index)
             self.known_face_encodings.pop(index)
-        
-        # --- AUGMENTATION (For Robustness) ---
-        new_encodings = [face_encoding] # Start with primary
-        
-        # Generate variations for duplicate checking even if face_recognition is available
-        # This helps catch duplicates in different lighting conditions
-        if len(face_rois) > 0:
-            roi = face_rois[0]
-            try:
-                # Variant 1: Horizontal Flip (Mirror)
-                flip_roi = cv2.flip(roi, 1)
-                new_encodings.append(self.encode_face(flip_roi))
-                
-                # Variant 2: Brightness Up
-                bright_roi = cv2.convertScaleAbs(roi, alpha=1.2, beta=10)
-                new_encodings.append(self.encode_face(bright_roi))
-                
-                # Variant 3: Brightness Down
-                dark_roi = cv2.convertScaleAbs(roi, alpha=0.8, beta=-10)
-                new_encodings.append(self.encode_face(dark_roi))
-                
-                # Variant 4: Zoom In (Crop 10%)
-                h, w = roi.shape[:2]
-                center = (w // 2, h // 2)
-                scale = 1.1
-                M = cv2.getRotationMatrix2D(center, 0, scale)
-                zoom_in_roi = cv2.warpAffine(roi, M, (w, h))
-                new_encodings.append(self.encode_face(zoom_in_roi))
-                
-                # Variant 5: Slight Rotation
-                M_plus = cv2.getRotationMatrix2D(center, 5, 1.0)
-                rot_plus = cv2.warpAffine(roi, M_plus, (w, h))
-                new_encodings.append(self.encode_face(rot_plus))
-
-                print(f"[register_face] Generated {len(new_encodings)} variations for robustness.")
-            except Exception as e:
-                 print(f"[register_face] Augmentation warning: {e}")
-
-        # Filter out None values from augmentation errors
-        new_encodings = [enc for enc in new_encodings if enc is not None]
-
-        # --- CHECK DUPLICATES (NOW CHECKS ALL VARIATIONS) ---
-        if not bypass_duplicate_check:
-            print(f"[Duplicate Check] Checking {len(new_encodings)} candidate variations against {len(self.known_face_encodings)} existing faces...")
             
-            if self.face_recognition_available:
-                try:
-                    # Ensure all known face encodings have the correct shape
-                    valid_known_encodings = []
-                    valid_known_names = []
-                    
-                    for i, known_encoding in enumerate(self.known_face_encodings):
-                        if known_encoding is not None and len(known_encoding) > 0: # Basic check
-                             valid_known_encodings.append(known_encoding)
-                             valid_known_names.append(self.known_face_names[i])
-                    
-                    if valid_known_encodings:
-                        print(f"[REINFORCED DEBUG] Checking uniqueness against {len(valid_known_encodings)} valid encodings", flush=True)
-                        # Check each NEW encoding (variation) against ALL existing encodings
-                        for var_idx, new_enc in enumerate(new_encodings):
-                            print(f"[REINFORCED DEBUG] Checking variation {var_idx}...")
-                            # Compare using an ULTRA-STRICT tolerance for duplicates
-                            face_distances = face_recognition.face_distance(valid_known_encodings, new_enc)
-                            
-                            # Find the best match
-                            closest_match_idx = -1
-                            if len(face_distances) > 0:
-                                closest_match_idx = np.argmin(face_distances)
-                                print(f"[REINFORCED DEBUG] Min distance in variation {var_idx}: {face_distances[closest_match_idx]:.4f}", flush=True)
-                            
-                            # Threshold 0.65 for dlib (Conservative to prevent any potential face reuse)
-                            # Distance < 0.65 means "Same Person". 
-                            # We want to BLOCK if same person.
-                            if closest_match_idx != -1:
-                                log_dist = face_distances[closest_match_idx]
-                                print(f"[Duplicate Check] Closest match: {valid_known_names[closest_match_idx]} with distance {log_dist:.4f}")
-                                
-                                if log_dist < 0.65:
-                                    existing_user = valid_known_names[closest_match_idx]
-                                
-                                # Check if the same face is being registered to a different user
-                                if existing_user and existing_user != user_id:
-                                    # Determine the role for error message
-                                    if existing_user.startswith('student'):
-                                        existing_role = 'student'
-                                    elif existing_user.startswith('teacher'):
-                                        existing_role = 'teacher'
-                                    else:
-                                        existing_role = 'user'
-                                    
-                                    print(f"[Duplicate Blocked - DLIB] Match found: {existing_user} (Dist: {face_distances[closest_match_idx]:.4f})", flush=True)
-                                    return False, f"Face already registered to {existing_role} '{existing_user}'. Each profile must have a unique face. Same face cannot be used for multiple profiles.", existing_user
-                except AttributeError:
-                    print("Face recognition library attribute error, falling back to OpenCV check")
-                    self.face_recognition_available = False
+        # --- AUGMENTATION (For Robustness) ---
+        new_encodings = [face_encoding]
+        roi = isolated_face_image
+        try:
+            flip_roi = cv2.flip(roi, 1)
+            new_encodings.append(self.encode_face(flip_roi))
+            
+            bright_roi = cv2.convertScaleAbs(roi, alpha=1.2, beta=10)
+            new_encodings.append(self.encode_face(bright_roi))
+            
+            dark_roi = cv2.convertScaleAbs(roi, alpha=0.8, beta=-10)
+            new_encodings.append(self.encode_face(dark_roi))
+            
+            h, w = roi.shape[:2]
+            center = (w // 2, h // 2)
+            scale = 1.1
+            M = cv2.getRotationMatrix2D(center, 0, scale)
+            zoom_in_roi = cv2.warpAffine(roi, M, (w, h))
+            new_encodings.append(self.encode_face(zoom_in_roi))
+            
+            M_plus = cv2.getRotationMatrix2D(center, 5, 1.0)
+            rot_plus = cv2.warpAffine(roi, M_plus, (w, h))
+            new_encodings.append(self.encode_face(rot_plus))
+        except Exception as e:
+            print(f"[register_face] Augmentation warning: {e}")
 
-            # Fallback (OpenCV/HOG) Duplicate Check
-            if not self.face_recognition_available:
-                # For the fallback, we'll use a distance measure to check for duplicates
-                best_match_name = None
-                max_similarity = 0.0
-                
-                # Iterate through ALL new variations (Primary + Augmented)
-                print(f"[REINFORCED DEBUG] Starting fallback duplicate check for {len(new_encodings)} variations against {len(self.known_face_encodings)} known faces", flush=True)
-                for var_idx, check_encoding in enumerate(new_encodings):
-                    for i, known_encoding in enumerate(self.known_face_encodings):
-                        # Ensure both encodings have the same shape before comparison
-                        if check_encoding.shape == known_encoding.shape:
-                            # Calculate cosine similarity
-                            dot_product = np.dot(check_encoding, known_encoding)
-                            norm_product = np.linalg.norm(check_encoding) * np.linalg.norm(known_encoding)
-                            if norm_product != 0:
-                                cosine_similarity = dot_product / norm_product
-                                
-                                if cosine_similarity > max_similarity:
-                                    max_similarity = cosine_similarity
-                                    best_match_name = self.known_face_names[i]
-                        else:
-                            if i == 0 and var_idx == 0:
-                                print(f"[REINFORCED DEBUG] Shape mismatch: {check_encoding.shape} vs {known_encoding.shape}")
-                
-                print(f"[Duplicate Check] Max Complexity Similarity found: {max_similarity:.4f} with {best_match_name}", flush=True)
-
-                # Check if the BEST match exceeds the duplicate threshold
-                # Raised threshold to 0.80 for MAXIMUM security
-                # Higher similarity = More likely to be same person
-                if best_match_name and max_similarity > 0.80: 
-                    print(f"[Duplicate Blocked - HOG] Best match: {best_match_name} with similarity {max_similarity:.4f}")
-                    existing_user = best_match_name
-                    
-                    # Check if the same face is being registered to a different user
-                    if existing_user and existing_user != user_id:
-                        # Determine the role for error message
-                        if existing_user.startswith('student'):
-                            existing_role = 'student'
-                        elif existing_user.startswith('teacher'):
-                            existing_role = 'teacher'
-                        else:
-                            existing_role = 'user'
-                        
-                        return False, f"Face already registered to {existing_role} '{existing_user}' (Match: {int(max_similarity*100)}%). Each profile must have a unique face.", existing_user
+        # Filter out None values
+        new_encodings = [enc for enc in new_encodings if enc is not None]
         
         # ADD ALL ENCODINGS (Robust Registration)
         # We store ALL variations so that future recognitions work in different conditions
@@ -773,52 +682,7 @@ class FaceRecognition:
             self.known_face_names = []
 
 # Utility functions for face detection
-def capture_face_for_registration(user_id, save_path):
-    """
-    Capture face images for registration using webcam
-    """
-    cap = cv2.VideoCapture(0)
-    hc_path = get_haarcascade_path()
-    face_cascade = cv2.CascadeClassifier(os.path.join(hc_path, 'haarcascade_frontalface_default.xml'))
-    if face_cascade.empty():
-        face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    
-    count = 0
-    max_images = 10  # Capture 10 images for better accuracy
-    
-    print(f"Capturing images for {user_id}. Press SPACE to capture, ESC to exit.")
-    
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-        
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        
-        cv2.imshow('Face Registration', frame)
-        
-        key = cv2.waitKey(1) & 0xFF
-        if key == 27:  # ESC key
-            break
-        elif key == 32 and len(faces) > 0:  # SPACE key and face detected
-            # Save the captured face
-            face_img = frame.copy()
-            face_filename = f"{save_path}/{user_id}_img_{count}.jpg"
-            cv2.imwrite(face_filename, face_img)
-            count += 1
-            print(f"Saved image {count}/{max_images}")
-            
-            if count >= max_images:
-                break
-    
-    cap.release()
-    cv2.destroyAllWindows()
-    
-    return count > 0
+# capture_face_for_registration removed for cloud deployment
 
 def train_model_from_dataset(dataset_path="backend/dataset"):
     """
