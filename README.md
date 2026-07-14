@@ -1,9 +1,224 @@
-# AI Tutor & Attendance System
+# 🎓 Smart Attendance System
 
-## System Overview
-The **AI Tutor & Attendance System** is a comprehensive solution for managing academic attendance, behavior monitoring, and user administration. It leverages **Face Recognition** (LBPH/Face_Recognition) for automated verification and real-time class monitoring.
+An AI-powered Smart Attendance System designed to automate student attendance using face recognition and provide intelligent academic management features.
+
+The system combines computer vision, Flask, OpenCV, and machine learning to create a practical attendance monitoring solution.
+
+## 🌐 Live Demo
+
+🚀 **Live Application:**  
+https://smart-attendance-system-3xze.onrender.com
+
+> Note: The application is hosted on Render's free instance. The first load may take up to 50 seconds if the service is inactive.
 
 ---
+
+## ✨ Features
+
+- 👤 Face-based student recognition
+- 📸 Browser webcam support
+- ✅ Automated attendance marking
+- 📊 Attendance monitoring
+- 🧑‍🎓 Student management
+- 👨‍🏫 Academic administration
+- 📄 PDF document support
+- 📱 SMS integration support
+- 🖼️ User avatar generation
+- 🤖 AI Tutor functionality
+- 🔐 User authentication
+- 📈 Attendance data management
+
+---
+
+## 🧠 Face Recognition
+
+The system uses computer vision and machine learning techniques for face-based attendance verification.
+
+The deployed version uses:
+
+- OpenCV
+- LBPH Face Recognizer
+- Scikit-learn
+- NumPy
+
+The trained recognition models are loaded by the application during startup.
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+
+- Python
+- Flask
+- Gunicorn
+
+### Computer Vision & Machine Learning
+
+- OpenCV
+- LBPH Face Recognition
+- Scikit-learn
+- NumPy
+
+### Frontend
+
+- HTML
+- CSS
+- JavaScript
+- Jinja Templates
+
+### Additional Libraries
+
+- Pillow
+- xhtml2pdf
+- PyPDF2
+- python-docx
+- SpeechRecognition
+- Twilio
+
+### Deployment
+
+- Render
+- GitHub
+
+---
+
+## 📂 Project Structure
+
+```text
+smart-attendance-system/
+│
+├── ai-tutor/
+│   ├── backend/
+│   │   ├── database/
+│   │   ├── dataset/
+│   │   ├── models/
+│   │   ├── rag/
+│   │   ├── static/
+│   │   ├── templates/
+│   │   ├── app.py
+│   │   ├── ai_tutor.py
+│   │   ├── avatar_utils.py
+│   │   ├── capture_utils.py
+│   │   ├── face_recognition_module.py
+│   │   ├── lbph_recognizer.py
+│   │   └── sms_utils.py
+│   │
+│   ├── requirements.txt
+│   └── Procfile
+│
+└── README.md
+```
+
+---
+
+## ⚙️ Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/aleesha6127/smart-attendance-system.git
+```
+
+### 2. Navigate to the Project
+
+```bash
+cd smart-attendance-system/ai-tutor
+```
+
+### 3. Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+### 4. Activate the Virtual Environment
+
+#### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+#### Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
+### 5. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 6. Run the Application
+
+```bash
+cd backend
+python app.py
+```
+
+Open the application in your browser.
+
+```text
+http://127.0.0.1:5000
+```
+
+---
+
+## 🚀 Deployment
+
+The application is deployed on Render using Gunicorn.
+
+### Root Directory
+
+```text
+ai-tutor
+```
+
+### Build Command
+
+```bash
+pip install -r requirements.txt
+```
+
+### Start Command
+
+```bash
+gunicorn --chdir backend app:app
+```
+
+### Python Version
+
+```text
+3.11.9
+```
+
+---
+
+## 🎯 Project Objective
+
+The main objective of this project is to reduce manual attendance management and provide an automated attendance verification system using computer vision and machine learning.
+
+The system demonstrates the practical integration of AI-based recognition, web development, and academic management.
+
+---
+
+## 👩‍💻 Developer
+
+**Aleesha Anas**
+
+MCA Student | Full Stack Developer | Python Developer
+
+GitHub: https://github.com/aleesha6127
+
+LinkedIn: https://www.linkedin.com/in/aleesha-anas-a7553533b/
+
+Portfolio: https://aleesha6127.github.io/portfolio/
+
+---
+
 
 ## Data Flow Diagrams (DFD)
 
@@ -105,3 +320,13 @@ graph TD
     P5 -->|View Daily Summary| Teacher
     P5 -->|View History| Student
 ```
+
+
+
+## ⭐ Support
+
+If you find this project useful, consider giving the repository a ⭐.
+
+---
+
+© 2026 Aleesha Anas
